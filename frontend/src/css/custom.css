@@ -1,53 +1,180 @@
 /**
  * Custom styles for Physical AI & Humanoid Robotics Textbook
+ * Beautiful, modern design with vibrant robotics-inspired colors
  */
 
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  /* Primary brand colors - Electric Blue */
+  --ifm-color-primary: #3b82f6;
+  --ifm-color-primary-dark: #2563eb;
+  --ifm-color-primary-darker: #1d4ed8;
+  --ifm-color-primary-darkest: #1e40af;
+  --ifm-color-primary-light: #60a5fa;
+  --ifm-color-primary-lighter: #93c5fd;
+  --ifm-color-primary-lightest: #dbeafe;
+
+  /* Secondary accent colors */
+  --color-accent-purple: #8b5cf6;
+  --color-accent-cyan: #06b6d4;
+  --color-accent-emerald: #10b981;
+  --color-accent-orange: #f59e0b;
+
+  /* Font settings */
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(59, 130, 246, 0.1);
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  /* Dark theme - Vibrant neon colors */
+  --ifm-color-primary: #60a5fa;
+  --ifm-color-primary-dark: #3b82f6;
+  --ifm-color-primary-darker: #2563eb;
+  --ifm-color-primary-darkest: #1d4ed8;
+  --ifm-color-primary-light: #93c5fd;
+  --ifm-color-primary-lighter: #bfdbfe;
+  --ifm-color-primary-lightest: #dbeafe;
+
+  /* Dark background with slight gradient */
+  --ifm-background-color: #0f172a;
+  --ifm-background-surface-color: #1e293b;
+
+  --docusaurus-highlighted-code-line-bg: rgba(96, 165, 250, 0.2);
 }
 
-/* Beautiful landing page styles */
+/* ============================================
+   BEAUTIFUL LANDING PAGE HERO
+   ============================================ */
+
 .hero--primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #4facfe 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
   color: white;
+  padding: 4rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Animated particles in background */
+.hero--primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px, 100px 100px;
+  background-position: 0 0, 25px 25px;
+  animation: particleFloat 20s linear infinite;
+}
+
+@keyframes particleFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100px); }
 }
 
 .hero__title {
   font-size: 3.5rem;
-  font-weight: 800;
+  font-weight: 900;
+  text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .hero__subtitle {
   font-size: 1.5rem;
   font-weight: 400;
-  opacity: 0.9;
+  opacity: 0.95;
+  text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
-/* Hardware table styles */
+/* ============================================
+   BEAUTIFUL CONTENT CARDS & SECTIONS
+   ============================================ */
+
+/* Feature cards with gradient borders */
+.markdown h2 {
+  color: var(--ifm-color-primary);
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--ifm-color-primary), var(--color-accent-purple)) 1;
+}
+
+/* Colorful emoji sections */
+.markdown > div[style*="textAlign: 'center'"] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin: 3rem 0;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+
+[data-theme='dark'] .markdown > div[style*="textAlign: 'center'"] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Beautiful buttons */
+.button--primary {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.button--primary:hover {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.button--secondary {
+  border: 2px solid var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.button--secondary:hover {
+  background: var(--ifm-color-primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Hardware table styles with gradient headers */
 .hardware-table {
   width: 100%;
   margin: 2rem 0;
   border-collapse: collapse;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .hardware-table th,
@@ -58,45 +185,81 @@
 }
 
 .hardware-table th {
-  background-color: var(--ifm-color-primary);
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   color: white;
   font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+}
+
+.hardware-table tbody tr {
+  transition: all 0.3s ease;
 }
 
 .hardware-table tbody tr:hover {
-  background-color: var(--ifm-table-stripe-background);
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+  transform: scale(1.01);
 }
 
 .hardware-table .total-row {
   font-weight: 700;
   font-size: 1.1em;
-  background-color: var(--ifm-color-emphasis-200);
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  border-top: 2px solid var(--ifm-color-primary);
 }
 
-/* Latency warning styles */
+/* ============================================
+   BEAUTIFUL ALERT BOXES & WARNINGS
+   ============================================ */
+
+/* Latency warning with gradient and glow */
 .latency-warning {
-  background-color: #fff3cd;
-  border-left: 4px solid #ff8c00;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 6px solid #f59e0b;
   padding: 1.5rem;
   margin: 2rem 0;
-  border-radius: 4px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.latency-warning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b);
+  background-size: 200% 100%;
+  animation: warningPulse 3s ease infinite;
+}
+
+@keyframes warningPulse {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 [data-theme='dark'] .latency-warning {
-  background-color: #664d03;
-  border-left-color: #ffc107;
-  color: #fff;
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.3), rgba(217, 119, 6, 0.3));
+  border-left-color: #fbbf24;
+  color: #fef3c7;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
 }
 
 .latency-warning__title {
   font-size: 1.3em;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #856404;
+  color: #92400e;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 [data-theme='dark'] .latency-warning__title {
-  color: #ffc107;
+  color: #fbbf24;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .latency-warning__content {
@@ -105,49 +268,198 @@
 
 .latency-warning__content ul {
   margin-top: 0.5rem;
+  list-style-type: none;
+  padding-left: 0;
 }
 
-/* Platform note styles */
+.latency-warning__content ul li::before {
+  content: '⚠️ ';
+  margin-right: 0.5rem;
+}
+
+/* Platform compatibility note with colorful badges */
 .platform-note {
-  background-color: var(--ifm-color-info-contrast-background);
-  border: 1px solid var(--ifm-color-info);
-  border-radius: 4px;
-  padding: 1rem;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(59, 130, 246, 0.05));
+  border: 2px solid var(--ifm-color-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
   margin-top: 1rem;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme='dark'] .platform-note {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(59, 130, 246, 0.1));
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
 }
 
 .platform-note__title {
-  font-weight: 600;
-  color: var(--ifm-color-info);
-  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+  margin-bottom: 1rem;
+  font-size: 1.1em;
 }
 
-/* Code block enhancements */
+/* ============================================
+   CODE BLOCKS & SYNTAX HIGHLIGHTING
+   ============================================ */
+
+/* Beautiful code blocks with gradient border */
 .prism-code {
   font-size: 0.9em;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Module icons in sidebar */
+.prism-code::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+}
+
+/* Code copy button enhancement */
+.clean-btn {
+  transition: all 0.3s ease;
+}
+
+.clean-btn:hover {
+  transform: scale(1.1);
+}
+
+/* ============================================
+   SIDEBAR & NAVIGATION ENHANCEMENTS
+   ============================================ */
+
+/* Module icons in sidebar with hover effects */
 .menu__link {
   font-size: 0.95rem;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
 }
 
-/* Responsive improvements */
-@media (max-width: 768px) {
+.menu__link:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  transform: translateX(4px);
+}
+
+.menu__link--active {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+  border-left: 3px solid var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN & MOBILE OPTIMIZATION
+   ============================================ */
+
+@media (max-width: 996px) {
   .hero__title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
 
   .hero__subtitle {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero__title {
+    font-size: 2.2rem;
+  }
+
+  .hero__subtitle {
+    font-size: 1.1rem;
+  }
+
+  .hero--primary {
+    padding: 3rem 1.5rem;
   }
 
   .hardware-table {
-    font-size: 0.9em;
+    font-size: 0.85em;
   }
 
   .hardware-table th,
   .hardware-table td {
-    padding: 0.5rem;
+    padding: 0.75rem 0.5rem;
   }
+
+  .button--lg {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero__title {
+    font-size: 1.8rem;
+  }
+
+  .hero__subtitle {
+    font-size: 1rem;
+  }
+
+  .hardware-table {
+    font-size: 0.75em;
+  }
+}
+
+/* ============================================
+   SMOOTH ANIMATIONS & TRANSITIONS
+   ============================================ */
+
+/* Fade-in animation for page load */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.markdown > * {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Scroll progress indicator */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+a:focus,
+button:focus,
+.menu__link:focus {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.gradient-text {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.glow-on-hover {
+  transition: all 0.3s ease;
+}
+
+.glow-on-hover:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
