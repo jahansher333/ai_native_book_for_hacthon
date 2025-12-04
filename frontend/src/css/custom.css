@@ -1,0 +1,153 @@
+/**
+ * Custom styles for Physical AI & Humanoid Robotics Textbook
+ */
+
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Beautiful landing page styles */
+.hero--primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.hero__title {
+  font-size: 3.5rem;
+  font-weight: 800;
+}
+
+.hero__subtitle {
+  font-size: 1.5rem;
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+/* Hardware table styles */
+.hardware-table {
+  width: 100%;
+  margin: 2rem 0;
+  border-collapse: collapse;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hardware-table th,
+.hardware-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--ifm-table-border-color);
+}
+
+.hardware-table th {
+  background-color: var(--ifm-color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.hardware-table tbody tr:hover {
+  background-color: var(--ifm-table-stripe-background);
+}
+
+.hardware-table .total-row {
+  font-weight: 700;
+  font-size: 1.1em;
+  background-color: var(--ifm-color-emphasis-200);
+}
+
+/* Latency warning styles */
+.latency-warning {
+  background-color: #fff3cd;
+  border-left: 4px solid #ff8c00;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border-radius: 4px;
+}
+
+[data-theme='dark'] .latency-warning {
+  background-color: #664d03;
+  border-left-color: #ffc107;
+  color: #fff;
+}
+
+.latency-warning__title {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #856404;
+}
+
+[data-theme='dark'] .latency-warning__title {
+  color: #ffc107;
+}
+
+.latency-warning__content {
+  line-height: 1.6;
+}
+
+.latency-warning__content ul {
+  margin-top: 0.5rem;
+}
+
+/* Platform note styles */
+.platform-note {
+  background-color: var(--ifm-color-info-contrast-background);
+  border: 1px solid var(--ifm-color-info);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.platform-note__title {
+  font-weight: 600;
+  color: var(--ifm-color-info);
+  margin-bottom: 0.5rem;
+}
+
+/* Code block enhancements */
+.prism-code {
+  font-size: 0.9em;
+}
+
+/* Module icons in sidebar */
+.menu__link {
+  font-size: 0.95rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .hero__title {
+    font-size: 2.5rem;
+  }
+
+  .hero__subtitle {
+    font-size: 1.2rem;
+  }
+
+  .hardware-table {
+    font-size: 0.9em;
+  }
+
+  .hardware-table th,
+  .hardware-table td {
+    padding: 0.5rem;
+  }
+}
