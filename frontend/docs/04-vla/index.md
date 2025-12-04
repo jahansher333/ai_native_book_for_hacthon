@@ -60,7 +60,7 @@ By the end of this module, you'll create an **autonomous humanoid system** that:
 
 ```mermaid
 graph LR
-    A[Voice Command<br/>"Clean the room"] --> B[Whisper STT<br/>Jetson]
+    A[Voice Command<br/>Clean the room] --> B[Whisper STT<br/>Jetson]
     B --> C[LLM Planner<br/>GPT-4/Llama 3.1]
     C --> D[Action Sequence<br/>Navigate, Pick, Place]
     D --> E[ROS 2 Action Servers]

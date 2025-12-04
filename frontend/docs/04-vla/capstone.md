@@ -37,7 +37,7 @@ Build a **complete autonomous humanoid system** that understands voice commands 
 
 ```mermaid
 graph TD
-    A[Voice Command<br/>"Bring me water"] --> B[Whisper STT<br/>Jetson Edge<br/>5-10ms]
+    A[Voice Command<br/>Bring me water] --> B[Whisper STT<br/>Jetson Edge<br/>5-10ms]
     B --> C{LLM Planner<br/>GPT-4 Cloud<br/>50-200ms OK}
 
     C --> D[Action Plan<br/>JSON Sequence]

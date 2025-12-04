@@ -37,7 +37,7 @@ graph TD
     D --> E[Edge Deployment on Jetson]
     E --> F[Real Physical Robots]
 
-    G[Natural Language<br/>"Clean the room"] --> A
+    G[Natural Language<br/>Clean the room] --> A
     A --> H[Action Planning<br/>Navigate + Pick + Place]
     H --> B
 ```
