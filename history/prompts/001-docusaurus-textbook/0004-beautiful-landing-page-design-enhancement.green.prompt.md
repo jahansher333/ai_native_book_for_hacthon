@@ -23,7 +23,7 @@ tests:
 
 ## Prompt
 
-you are b=not create a landing page create a landing page and book color its not its betiful color implement it
+you are not create a landing page create a landing page and book color its not its interactive color implement it
 
 ## Response snapshot
 

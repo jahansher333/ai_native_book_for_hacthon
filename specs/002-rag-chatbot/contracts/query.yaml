@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: RAG Chatbot Query API
+  version: 1.0.0
+  description: API endpoint for querying the textbook via RAG (Retrieval-Augmented Generation)
+
+servers:
+  - url: https://your-backend.render.com
+    description: Production server (Render)
+  - url: http://localhost:8000
+    description: Development server
+
+paths:
+  /query:
+    post:
+      summary: Query the textbook
+      description: |
+        Submit a natural language question about the textbook. The API will:
+        1. Embed the question using OpenAI text-embedding-3-small
+        2. Search Qdrant for top-5 relevant chunks
+        3. Pass context to OpenAI Agents SDK with function calling
+        4. Generate an answer with source citations
+        5. Store the conversation in Neon Postgres
+
+      operationId: queryTextbook
+
+      tags:
+        - Public
+
+      requestBody:
+        description: Query request with optional selected text context
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+                - session_id
+              properties:
+                question:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  description: Natural language question about the textbook
+                  example: "What is ROS 2?"
+
+                selected_text:
+                  type: string
+                  nullable: true
+                  maxLength: 2000
+                  description: Text selected by user on the page (optional context)
+                  example: "ROS 2 is the industry-standard middleware..."
+
+                session_id:
+                  type: string
+                  format: uuid
+                  description: Unique session identifier (generated client-side)
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+
+                module_filter:
+                  type: string
+                  enum: ["01-ros2", "02-gazebo-unity", "03-isaac", "04-vla", "hardware", "all"]
+                  default: "all"
+                  description: Filter search to specific module
+
+            example:
+              question: "What is ROS 2?"
+              selected_text: null
+              session_id: "550e8400-e29b-41d4-a716-446655440000"
+              module_filter: "all"
+
+      responses:
+        '200':
+          description: Answer generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - answer
+                  - sources
+                properties:
+                  answer:
+                    type: string
+                    description: Generated answer with source citations
+                    example: "ROS 2 (Robot Operating System 2) is the industry-standard middleware for building distributed robot systems... [Source: Module 1 - ROS 2 Fundamentals]"
+
+                  sources:
+                    type: array
+                    description: Source chunks used to generate the answer
+                    items:
+                      type: object
+                      required:
+                        - title
+                        - url
+                        - chunk_id
+                        - score
+                      properties:
+                        title:
+                          type: string
+                          description: Module and chapter title
+                          example: "Module 1 - ROS 2 Fundamentals"
+
+                        url:
+                          type: string
+                          format: uri-reference
+                          description: Relative URL to source content
+                          example: "/docs/ros2/nodes"
+
+                        chunk_id:
+                          type: integer
+                          description: Qdrant point ID
+                          example: 12345
+
+                        score:
+                          type: number
+                          format: float
+                          minimum: 0
+                          maximum: 1
+                          description: Cosine similarity score (0-1)
+                          example: 0.92
+
+                  confidence:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                    description: Agent's confidence in the answer (0-1)
+                    example: 0.88
+
+                  processing_time_ms:
+                    type: integer
+                    description: Total processing time in milliseconds
+                    example: 1850
+
+              example:
+                answer: "ROS 2 (Robot Operating System 2) is the industry-standard middleware for building distributed robot systems. It provides language-agnostic communication primitives (topics, services, actions) for robot software components. [Source: Module 1 - ROS 2 Fundamentals]"
+                sources:
+                  - title: "Module 1 - ROS 2 Fundamentals"
+                    url: "/docs/ros2"
+                    chunk_id: 12345
+                    score: 0.92
+                  - title: "Module 1 - Nodes"
+                    url: "/docs/ros2/nodes"
+                    chunk_id: 12346
+                    score: 0.87
+                confidence: 0.88
+                processing_time_ms: 1850
+
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid question"
+                message: "Question must be between 1 and 1000 characters"
+
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Rate limit exceeded"
+                message: "Maximum 10 queries per minute. Please wait 30 seconds."
+
+        '500':
+          description: Server error during query processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Query failed"
+                message: "Failed to generate answer from OpenAI API"
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error context (optional)
