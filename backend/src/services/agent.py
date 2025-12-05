@@ -1,163 +1,194 @@
-from openai import OpenAI
-from typing import Dict, Any, List
-import json
-import os
-import time
+"""
+RAG Agent using OpenAI Agents SDK with Gemini API
+Implements intelligent retrieval-augmented generation for textbook queries
+"""
+import asyncio
+import re
+from typing import Dict, List, Optional
+from agents import Agent, Runner, function_tool, AsyncOpenAI, OpenAIChatCompletionsModel, set_tracing_disabled
+from dotenv import load_dotenv
+
+from ..config import settings
+from .embeddings import embedding_service
+from .vector_store import vector_store_service
+
+# Load environment and disable tracing
+load_dotenv(override=True)
+set_tracing_disabled(True)
+
+# Initialize Gemini via OpenAI-compatible endpoint
+external_provider = AsyncOpenAI(
+    api_key=settings.gemini_api_key,
+    base_url=settings.base_url
+)
+
+# Create Gemini model instance
+gemini_model = OpenAIChatCompletionsModel(
+    model=settings.model_name,
+    openai_client=external_provider
+)
 
 
-class RAGAgent:
-    """RAG Agent using OpenAI function calling for textbook Q&A"""
+@function_tool
+async def search_textbook(query: str) -> str:
+    """
+    Search the Physical AI & Humanoid Robotics textbook for relevant content.
 
-    def __init__(self, vector_store_service, embedding_service):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.vector_store = vector_store_service
-        self.embedding_service = embedding_service
-        self.model = "gpt-4o-mini"
+    This tool retrieves the most relevant sections from the textbook based on semantic similarity.
+    Always use this tool to find information before answering questions.
 
-        # Define search tool schema
-        self.search_tool = {
-            "type": "function",
-            "function": {
-                "name": "search_textbook",
-                "description": "Search the Physical AI & Humanoid Robotics textbook for relevant content",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "The search query or question"
-                        },
-                        "selected_text": {
-                            "type": "string",
-                            "description": "Additional context from user's text selection"
-                        },
-                        "module_filter": {
-                            "type": "string",
-                            "enum": ["01-ros2", "02-gazebo-unity", "03-isaac", "04-vla", "hardware", "all"],
-                            "description": "Filter results by specific module"
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-        }
+    Args:
+        query: The search query or question to find relevant textbook content for
 
-    def search_textbook_function(self, query: str, selected_text: str = "", module_filter: str = "all") -> List[Dict[str, Any]]:
-        """Function called by the agent to search textbook"""
-        # Combine query with selected text if provided
-        search_query = query
-        if selected_text:
-            search_query = f"{selected_text}\n\nQuestion: {query}"
+    Returns:
+        Formatted context with relevant textbook sections and their sources
+    """
+    try:
+        # Embed the query
+        query_embedding = await embedding_service.embed_query(query)
 
-        # Generate embedding
-        embedding = self.embedding_service.embed_text(search_query)
-
-        # Search Qdrant
-        results = self.vector_store.search(
-            query_embedding=embedding,
-            limit=5,
-            module_filter=module_filter
+        # Search Qdrant for top-5 similar chunks
+        results = await vector_store_service.search(
+            query_embedding=query_embedding,
+            limit=settings.top_k_results,
+            score_threshold=settings.similarity_threshold
         )
 
-        return results
+        if not results:
+            return "No relevant content found in the textbook for this query. The answer may not be available in the course materials."
 
-    def run_rag_agent(
-        self,
-        question: str,
-        selected_text: str = "",
-        module_filter: str = "all"
-    ) -> Dict[str, Any]:
-        """
-        Run RAG agent with function calling
+        # Format results with sources
+        context_parts = []
+        for idx, result in enumerate(results, 1):
+            payload = result['payload']
+            score = result['score']
 
-        Args:
-            question: User's question
-            selected_text: Optional selected text from page
-            module_filter: Module to search in
+            context_parts.append(
+                f"[Source {idx}] (Relevance: {score:.2f})\n"
+                f"Module: {payload['module']}\n"
+                f"Section: {payload['section']}\n"
+                f"Page: {payload['page']}\n"
+                f"Content: {payload['text']}\n"
+                f"---"
+            )
 
-        Returns:
-            Dict with answer, sources, and confidence
-        """
-        start_time = time.time()
+        return "\n\n".join(context_parts)
 
-        system_prompt = """You are a helpful assistant for the Physical AI & Humanoid Robotics textbook.
+    except Exception as e:
+        return f"Error searching textbook: {str(e)}"
+
+
+# Create RAG agent with Gemini
+rag_agent = Agent(
+    name="TextbookAssistant",
+    instructions="""You are a helpful assistant for the Physical AI & Humanoid Robotics textbook.
 
 CRITICAL RULES:
-1. Answer ONLY using the provided context from the search_textbook tool
-2. Do NOT use external knowledge
-3. Always cite sources using the format: [Source: Module X - Title]
-4. If the answer is not in the context, say "I don't have information about that in the textbook."
-5. For robot control questions, emphasize edge deployment (Jetson) for <10ms latency
-6. Cite accurate hardware prices (e.g., "$249 Jetson Orin Nano")
-"""
+1. **Book-Only Retrieval**: Answer ONLY using information from the textbook. You MUST use the search_textbook function to find relevant content before answering any question.
+2. **Always Cite Sources**: Include citations in the format [Source: Module - Section, Page X] for all factual claims.
+3. **Refuse Non-Textbook Questions**: If asked about topics outside the textbook (weather, news, general knowledge), politely say: "I can only answer questions about the Physical AI & Humanoid Robotics textbook content. Please ask about ROS 2, Gazebo, Unity, Isaac Sim, Vision-Language-Action models, or hardware requirements."
+4. **Selected Text Priority**: If the user provides selected text from the page, prioritize that context in your answer.
+5. **Accuracy First**: Be concise but accurate. If the information is not in the search results, say so clearly.
+6. **Emphasize Best Practices**: When relevant, emphasize sim-to-real workflows, edge deployment on Jetson devices, and the dangers of high-latency cloud control for robots.
 
-        user_message = question
+ANSWER FORMAT:
+- Start with a direct answer
+- Provide details from the textbook
+- End with proper citations
+- Keep responses concise (2-4 paragraphs maximum)
+
+Example citation format:
+"ROS 2 uses DDS middleware for communication [Source: ROS 2 - Introduction, Page 5]"
+""",
+    tools=[search_textbook],
+    model=gemini_model
+)
+
+
+async def run_rag_agent(
+    question: str,
+    selected_text: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> Dict:
+    """
+    Run the RAG agent to answer a question using textbook content
+
+    Args:
+        question: User's question
+        selected_text: Optional text selected by user on the page
+        session_id: Optional session identifier
+
+    Returns:
+        Dict with answer, sources (citations), and confidence score
+    """
+    try:
+        # Enhance question with selected text if provided
         if selected_text:
-            user_message = f"Selected text context:\n{selected_text}\n\nQuestion: {question}"
+            enhanced_question = f"""The user has selected the following text from the page:
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_message}
-        ]
+---SELECTED TEXT---
+{selected_text[:2000]}  # Truncate to 2000 chars
+---END SELECTED TEXT---
 
-        # Initial call to agent
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            tools=[self.search_tool],
-            tool_choice="auto"
-        )
+User's question about this selection: {question}
 
-        sources = []
-        confidence = 0.5
+Please answer the question using both the selected text context and relevant information from the textbook."""
+        else:
+            enhanced_question = question
 
-        # Handle tool calls (agentic loop)
-        while response.choices[0].finish_reason == "tool_calls":
-            tool_call = response.choices[0].message.tool_calls[0]
+        # Run the agent
+        result = await Runner.run(rag_agent, enhanced_question)
 
-            if tool_call.function.name == "search_textbook":
-                args = json.loads(tool_call.function.arguments)
-                search_results = self.search_textbook_function(
-                    query=args.get("query", question),
-                    selected_text=args.get("selected_text", selected_text),
-                    module_filter=args.get("module_filter", module_filter)
-                )
+        # Extract the final answer
+        answer = result.final_output if hasattr(result, 'final_output') else str(result)
 
-                # Store sources
-                sources = [
-                    {
-                        "title": f"{result['module']} - {result['chapter']}",
-                        "url": result["source_url"],
-                        "chunk_id": result["chunk_id"],
-                        "score": result["score"]
-                    }
-                    for result in search_results
-                ]
+        # Extract citations from the answer using regex
+        citations = extract_citations(answer)
 
-                # Calculate confidence (average of top scores)
-                if sources:
-                    confidence = sum(s["score"] for s in sources) / len(sources)
-
-                # Feed results back to agent
-                messages.append(response.choices[0].message)
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(search_results)
-                })
-
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    tools=[self.search_tool]
-                )
-
-        answer = response.choices[0].message.content
-        processing_time_ms = int((time.time() - start_time) * 1000)
+        # Calculate confidence based on number of sources found
+        confidence = min(0.9, 0.5 + (len(citations) * 0.1))
 
         return {
             "answer": answer,
-            "sources": sources,
-            "confidence": confidence,
-            "processing_time_ms": processing_time_ms
+            "citations": citations,
+            "confidence": confidence
         }
+
+    except Exception as e:
+        # Return error response
+        return {
+            "answer": f"I encountered an error while processing your question: {str(e)}. Please try rephrasing your question or contact support if the issue persists.",
+            "citations": [],
+            "confidence": 0.0
+        }
+
+
+def extract_citations(answer: str) -> List[Dict]:
+    """
+    Extract citations from the agent's answer
+
+    Args:
+        answer: The agent's response text
+
+    Returns:
+        List of citation dictionaries
+    """
+    citations = []
+
+    # Pattern to match citations like [Source: Module - Section, Page X]
+    pattern = r'\[Source:\s*([^-]+?)\s*-\s*([^,]+?),\s*Page\s*(\d+)\]'
+    matches = re.findall(pattern, answer)
+
+    for match in matches:
+        module, section, page = match
+        citations.append({
+            "module": module.strip(),
+            "section": section.strip(),
+            "page": int(page),
+            "source_file": f"{module.lower().replace(' ', '-')}/{section.lower().replace(' ', '-')}.md",
+            "chunk_id": "",  # Will be filled from search results
+            "relevance_score": 0.85,  # Default score
+            "text_snippet": ""  # Excerpt from the source
+        })
+
+    return citations
