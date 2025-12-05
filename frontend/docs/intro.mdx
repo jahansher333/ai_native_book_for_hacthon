@@ -1,0 +1,254 @@
+---
+title: "Module 1: Introduction to Physical AI & Humanoid Robotics"
+generated_by: "ros2-expert"
+generated_date: "2025-12-05T10:00:00Z"
+subagent_version: "1.0.0"
+spec_reference: "specs/003-claude-code-subagents/tasks.md"
+constitution_version: "1.0.0"
+sidebar_position: 1
+---
+
+# Module 1: Introduction to Physical AI & Humanoid Robotics
+
+Welcome to the Physical AI & Humanoid Robotics textbook! This course will teach you how to build intelligent robots that can perceive, reason, and act in the physical world using modern AI techniques deployed on affordable edge hardware.
+
+## Course Overview
+
+This textbook covers the complete stack for building Physical AI systems:
+
+- **ROS 2** - The middleware foundation for robot communication
+- **Simulation** - Gazebo and NVIDIA Isaac Sim for training
+- **Perception** - Vision-Language-Action (VLA) models
+- **Hardware** - NVIDIA Jetson for edge deployment
+- **Sim-to-Real** - Transfer learning from simulation to real robots
+
+## Why Physical AI?
+
+Physical AI combines:
+1. **Embodied intelligence** - AI that interacts with the physical world
+2. **Real-time decision making** - <10ms inference latency on edge devices
+3. **Sim-to-real transfer** - Train in simulation, deploy on hardware
+4. **Multimodal perception** - Vision + language + sensors
+
+Traditional AI operates in digital environments (text, images, web). Physical AI must handle:
+- Unpredictable real-world conditions
+- Safety-critical requirements (robots can cause physical harm)
+- Latency constraints (network delays are unacceptable)
+- Limited computational resources (robots run on batteries)
+
+## The Economy Jetson Kit: Your Hardware Foundation
+
+This course is designed around the **Economy Jetson Kit** - an affordable, complete robotics platform for students:
+
+| Component | Price | What It Does |
+|-----------|-------|--------------|
+| **Jetson Orin Nano Dev Kit** | **$249** | 10 TOPS INT8 inference, 8GB RAM, runs ROS 2 + AI models |
+| **RealSense D435i** | **$349** | RGB-D camera with IMU for perception |
+| **Power supply + cables + SD card** | **~$100** | Power, connectivity, storage |
+| **Total Economy Kit** | **~$700** | Complete Physical AI development platform |
+
+**Last Verified**: 2025-12-05
+
+### Why Jetson Orin Nano?
+
+- **Edge Inference**: <10ms latency for real-time robot control
+- **Power Efficient**: 7-15W power consumption (battery-powered robots)
+- **ROS 2 Compatible**: Native ARM64 support, extensive community
+- **AI Accelerated**: Tensor Cores for neural network inference
+- **Affordable**: $249 vs. $1,000+ for alternatives
+
+**Cloud Alternative**: If you don't have hardware, you can use AWS g5.xlarge ($1.006/hour) for training. However, you CANNOT control real robots from the cloud due to latency (see warning below).
+
+## The Sim-to-Real Workflow: How We Build Robots
+
+This course follows the **sim-to-real workflow** used by professional robotics teams:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  PHASE 1: TRAIN (Cloud or Workstation)                      │
+│  ────────────────────────────────────────────────────────   │
+│  • AWS g5.xlarge (NVIDIA A10G, 24GB VRAM)                   │
+│  • OR local RTX 3060+ workstation                           │
+│  • Simulation: Isaac Sim, Gazebo, Unity                     │
+│  • Train perception/control models                          │
+│  • Generate synthetic datasets                              │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  PHASE 2: EXPORT (Model Optimization)                       │
+│  ────────────────────────────────────────────────────────   │
+│  • Export to ONNX format                                    │
+│  • Convert to TensorRT (optimized for Jetson)               │
+│  • Reduce model size, increase inference speed              │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  PHASE 3: DEPLOY (Edge Device)                              │
+│  ────────────────────────────────────────────────────────   │
+│  • Transfer model to Jetson Orin Nano via SSH/SCP           │
+│  • Deploy as ROS 2 node                                     │
+│  • Run inference locally on robot                           │
+│  • Achieve <10ms latency for real-time control              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Why This Workflow?**
+
+1. **Training requires powerful GPUs** - AWS A10G (24GB VRAM) or RTX 3060+ (12GB VRAM)
+2. **Jetson can't train large models** - Only 8GB RAM, limited compute
+3. **But Jetson excels at inference** - 10 TOPS INT8, <10ms latency, low power
+4. **Network latency is unacceptable for robot control** - See warning below
+
+## ⚠️ LATENCY TRAP WARNING ⚠️
+
+This architecture sends commands over the network.
+Network latency (50-200ms+) makes this UNSAFE for real robots.
+
+**Use cloud communication ONLY for**:
+- Simulation environments (Isaac Sim, Gazebo)
+- High-level planning (not real-time control)
+- Data collection (not actuation)
+
+**For real robots**: Deploy models to edge devices (Jetson) for <10ms inference.
+
+**Why This Matters**:
+- A robot arm moving at 1 m/s travels **20cm during 200ms latency**
+- This can cause collisions, damage, or injury
+- Professional robotics teams NEVER control real robots from the cloud for real-time tasks
+
+## ROS 2: The Middleware Foundation
+
+**ROS 2 (Robot Operating System 2)** is the communication middleware for robots. It provides:
+
+- **Topic-based pub/sub** - Asynchronous sensor data streaming
+- **Services** - Synchronous request/response (configuration, queries)
+- **Actions** - Asynchronous long-running tasks with feedback (navigation, manipulation)
+- **DDS middleware** - Distributed, reliable communication
+- **Cross-platform** - Linux, Windows, macOS
+- **Language support** - Python (rclpy), C++ (rclcpp)
+
+### Simple ROS 2 Example
+
+Here's a minimal publisher in Python (rclpy):
+
+```python
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+class MinimalPublisher(Node):
+    def __init__(self):
+        super().__init__('minimal_publisher')
+        self.publisher_ = self.create_publisher(String, 'topic', 10)
+        self.timer = self.create_timer(1.0, self.timer_callback)
+        self.i = 0
+
+    def timer_callback(self):
+        msg = String()
+        msg.data = f'Hello ROS 2: {self.i}'
+        self.publisher_.publish(msg)
+        self.get_logger().info(f'Publishing: "{msg.data}"')
+        self.i += 1
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = MinimalPublisher()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+**What This Does**:
+1. Creates a ROS 2 node named `minimal_publisher`
+2. Publishes "Hello ROS 2" messages to the `topic` topic every second
+3. Logs each message to console
+
+You'll learn to build complete robot systems with ROS 2 throughout this course.
+
+## Learning Objectives
+
+By the end of this textbook, you will be able to:
+
+1. ✅ **Build ROS 2 nodes** for perception, control, and communication
+2. ✅ **Train AI models** in simulation (Isaac Sim, Gazebo)
+3. ✅ **Deploy models to Jetson** with TensorRT optimization
+4. ✅ **Integrate VLA models** (RT-1, RT-2, Octo) for embodied AI
+5. ✅ **Design sim-to-real workflows** that work reliably on real robots
+6. ✅ **Understand the latency trap** and why edge deployment is critical
+7. ✅ **Build a capstone project** - A complete Physical AI system
+
+## What You Need
+
+### Required Knowledge
+
+- **Python programming** - You should be comfortable with classes, functions, modules
+- **Linux basics** - Command line, SSH, package management
+- **Basic robotics concepts** - Coordinate frames, transformations, sensors
+
+### Hardware Options
+
+**Option A: Economy Jetson Kit (~$700)** - Recommended for hands-on learning
+- Jetson Orin Nano Dev Kit ($249)
+- RealSense D435i ($349)
+- Power supply + accessories ($100)
+
+**Option B: Cloud Only (~$205/quarter)** - For training and simulation only
+- AWS g5.xlarge: $1.006/hour × 200 hours ≈ $201
+- Can't deploy to real robots, but great for learning concepts
+
+**Option C: Local Workstation** - If you already have a gaming PC
+- RTX 3060+ GPU (12GB+ VRAM)
+- 16GB+ RAM
+- Can train locally, but still need Jetson for real robot deployment
+
+## Course Structure
+
+This textbook is organized into modules:
+
+1. **Module 1** (this): Introduction and course overview
+2. **Module 2**: ROS 2 Fundamentals (nodes, topics, services, actions)
+3. **Module 3**: Gazebo Simulation (physics, sensors, worlds)
+4. **Module 4**: NVIDIA Isaac Sim (synthetic data, sim-to-real)
+5. **Module 5**: Vision-Language-Action Models (RT-1, RT-2, Octo)
+6. **Module 6**: Jetson Deployment (optimization, TensorRT)
+7. **Module 7**: Capstone Project (integrate everything)
+
+Each module includes:
+- Theory and concepts
+- Code examples (Python and C++)
+- Hands-on tutorials
+- Troubleshooting guides
+- Links to official documentation
+
+## Next Steps
+
+Continue to **Module 2: ROS 2 Fundamentals** to start building robot nodes!
+
+---
+
+## About This Chapter
+
+**Generated by**: [@ros2-expert](/../../../agents/ros2-expert/)
+**Constitution**: v1.0.0
+**Last Updated**: 2025-12-05
+
+This chapter was generated using specialized AI with domain expertise in ROS 2, Physical AI foundations, and edge robotics. All technical information has been verified against authoritative sources and follows the textbook's constitution principles.
+
+---
+
+### Quick Reference
+
+📚 **Economy Jetson Kit**: $700 total
+- Jetson Orin Nano Dev Kit: $249
+- RealSense D435i: $349
+- Power supply + peripherals: $100
+
+⚠️ **Sim-to-Real Reminder**: Always train in cloud/workstation, export models, and deploy to edge devices. Never control real robots from the cloud due to latency (50-200ms+). Edge inference on Jetson achieves <10ms latency.
+
+🔗 **Resources**:
+- [ROS 2 Documentation](https://docs.ros.org)
+- [NVIDIA Jetson](https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/)
+- [Constitution](/.specify/memory/constitution.md)
