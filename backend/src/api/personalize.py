@@ -1,13 +1,32 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Optional
 import logging
 
-# Import auth dependency from existing auth module
-from ..services.auth_service import verify_token
+# Import auth service
+from ..services.auth_service import AuthService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Auth dependency
+async def get_current_user(authorization: Optional[str] = Header(None)) -> str:
+    """Extract and verify JWT token from Authorization header"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        # Extract token from "Bearer <token>"
+        token = authorization.replace("Bearer ", "")
+        payload = AuthService.verify_token(token)
+
+        if not payload:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        return payload.get("email")
+    except Exception as e:
+        logger.error(f"Auth error: {str(e)}")
+        raise HTTPException(status_code=401, detail="Invalid authentication")
 
 class UserProfile(BaseModel):
     experience: Literal['beginner', 'intermediate', 'advanced']
@@ -28,7 +47,7 @@ class PersonalizeChapterResponse(BaseModel):
 @router.post("/api/personalize/chapter", response_model=PersonalizeChapterResponse)
 async def personalize_chapter(
     request: PersonalizeChapterRequest,
-    user_email: str = Depends(verify_token)
+    user_email: str = Depends(get_current_user)
 ):
     """
     Personalize chapter content based on user profile.

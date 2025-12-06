@@ -7,57 +7,18 @@ to personalize educational content based on user profiles.
 Uses OpenAI Agents SDK with Gemini 2.0 Flash for fast, cost-effective personalization.
 """
 
-from openai import OpenAI
+from agents import Agent, Runner
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize OpenAI client configured for Gemini
-client = OpenAI(
-    api_key=os.getenv("GEMINI_API_KEY"),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-)
+# Define the personalizer agent
+personalizer_agent = Agent(
+    name="personalizer",
+    instructions="""You are an expert technical content personalizer for a Physical AI & Robotics textbook.
 
-async def personalize_chapter_content(
-    original_content: str,
-    user_profile: dict,
-    chapter_id: str
-) -> str:
-    """
-    Call @personalizer subagent to rewrite chapter content based on user profile.
-
-    Args:
-        original_content: The original chapter text (MDX format)
-        user_profile: Dict with experience, hasRTX, hasJetson, hasRobot
-        chapter_id: Identifier for the chapter
-
-    Returns:
-        Personalized MDX content as string
-    """
-
-    # Build hardware description
-    hardware_list = []
-    if user_profile['hasRTX']:
-        hardware_list.append('RTX GPU')
-    if user_profile['hasJetson']:
-        hardware_list.append('Jetson Orin Nano')
-    if user_profile['hasRobot']:
-        hardware_list.append('Real Robot')
-
-    hardware_text = ', '.join(hardware_list) if hardware_list else 'No hardware (simulation only)'
-
-    # Build comprehensive personalization prompt
-    prompt = f"""You are an expert technical content personalizer for a Physical AI & Robotics textbook.
-
-USER PROFILE:
-- Experience Level: {user_profile['experience']}
-- Hardware: {hardware_text}
-
-ORIGINAL CHAPTER CONTENT:
-{original_content}
-
-TASK: Rewrite this chapter to perfectly match the user's profile.
+TASK: Rewrite educational content to perfectly match the user's profile.
 
 EXPERIENCE LEVEL ADJUSTMENTS:
 
@@ -124,82 +85,67 @@ FORMATTING REQUIREMENTS:
 5. Use appropriate tone for experience level
 6. Include hardware-specific examples inline
 
-EXAMPLE TRANSFORMATIONS:
-
-Original (Generic):
-"ROS 2 nodes communicate via topics. Here's a basic publisher:
-```python
-import rclpy
-from std_msgs.msg import String
-
-rclpy.init()
-node = rclpy.create_node('publisher')
-pub = node.create_publisher(String, 'topic', 10)
-```"
-
-For BEGINNER with RTX:
-"Let me explain ROS 2 nodes like this: imagine nodes as separate programs that talk to each other by sending messages (called topics). Think of it like different apps on your phone sharing data.
-
-Since you have an RTX GPU, you'll be able to run these examples with full visualization in RViz2!
-
-Here's your first publisher node (with detailed comments):
-```python
-import rclpy  # ROS 2 Python library
-from std_msgs.msg import String  # Message type for text
-
-# Step 1: Initialize ROS 2
-rclpy.init()
-
-# Step 2: Create a node (think of it as starting your program)
-node = rclpy.create_node('publisher')
-
-# Step 3: Create a publisher (this will send messages)
-# - String: type of message
-# - 'topic': name of the channel
-# - 10: queue size (how many messages to buffer)
-pub = node.create_publisher(String, 'topic', 10)
-```
-
-💡 **What This Means**: Your node can now broadcast messages to any other node listening on the 'topic' channel!"
-
-For ADVANCED with Jetson:
-"Quick overview: Standard ROS 2 pub/sub. Here's an optimized publisher for Jetson deployment:
-```python
-import rclpy
-from std_msgs.msg import String
-from rclpy.qos import QoSProfile, ReliabilityPolicy
-
-rclpy.init()
-node = rclpy.create_node('publisher', enable_rosout=False)  # Disable logging for performance
-
-# Jetson optimization: Use best-effort QoS for lower latency
-qos = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT)
-pub = node.create_publisher(String, 'topic', qos)
-```
-
-🤖 **Jetson Deployment**: Use `colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release` and set `RMW_IMPLEMENTATION=rmw_fastrtps_cpp` for zero-copy transport. With your Jetson's limited memory, prefer DDS tuning over large queues."
-
 Return ONLY the personalized MDX content. Do NOT include explanations or meta-commentary about the changes.
 """
+)
 
-    logger.info(f"Calling Gemini 2.0 Flash for personalization (experience={user_profile['experience']})")
+async def personalize_chapter_content(
+    original_content: str,
+    user_profile: dict,
+    chapter_id: str
+) -> str:
+    """
+    Call @personalizer subagent to rewrite chapter content based on user profile.
+
+    Args:
+        original_content: The original chapter text (MDX format)
+        user_profile: Dict with experience, hasRTX, hasJetson, hasRobot
+        chapter_id: Identifier for the chapter
+
+    Returns:
+        Personalized MDX content as string
+    """
+
+    # Build hardware description
+    hardware_list = []
+    if user_profile.get('hasRTX'):
+        hardware_list.append('RTX GPU')
+    if user_profile.get('hasJetson'):
+        hardware_list.append('Jetson Orin Nano')
+    if user_profile.get('hasRobot'):
+        hardware_list.append('Real Robot')
+
+    hardware_text = ', '.join(hardware_list) if hardware_list else 'No hardware (simulation only)'
+
+    # Build user query for the agent
+    user_message = f"""USER PROFILE:
+- Experience Level: {user_profile.get('experience', 'intermediate')}
+- Hardware: {hardware_text}
+
+ORIGINAL CHAPTER CONTENT:
+{original_content}
+
+Please rewrite this chapter to match the user's profile according to your instructions."""
+
+    logger.info(f"Calling Gemini 2.0 Flash via Agents SDK for personalization (experience={user_profile.get('experience')})")
 
     try:
-        # Call Gemini via OpenAI SDK with personalization prompt
-        response = client.chat.completions.create(
-            model="gemini-2.0-flash-exp",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=8000,
-            temperature=0.7
+        # Create a runner with Gemini configuration
+        runner = Runner(
+            agent=personalizer_agent,
+            api_key=os.getenv("GEMINI_API_KEY"),
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            model="gemini-2.0-flash-exp"
         )
 
-        personalized_content = response.choices[0].message.content
+        # Run the agent with the user message
+        result = await runner.run(user_message)
+
+        personalized_content = result.messages[-1].content
         logger.info(f"Successfully personalized chapter {chapter_id}")
 
         return personalized_content
 
     except Exception as e:
-        logger.error(f"Gemini API error: {str(e)}")
+        logger.error(f"Gemini API error via Agents SDK: {str(e)}")
         raise Exception(f"AI personalization failed: {str(e)}")
