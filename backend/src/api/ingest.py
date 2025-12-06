@@ -46,7 +46,7 @@ def extract_metadata_from_path(file_path: Path) -> dict:
 
 
 @router.post("/ingest")
-async def ingest_content(docs_dir: str = "../../docs"):
+async def ingest_content(docs_dir: str = "../frontend/docs"):
     """
     Ingest textbook content from Markdown files
 

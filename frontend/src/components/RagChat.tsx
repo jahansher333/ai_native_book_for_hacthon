@@ -28,7 +28,8 @@ const RagChat: React.FC = () => {
   const [selectedText, setSelectedText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => {
-    // Get or create session ID
+    // Get or create session ID (only on client-side)
+    if (typeof window === 'undefined') return ''; // SSR guard
     const stored = localStorage.getItem('rag_session_id');
     if (stored) return stored;
     const newId = crypto.randomUUID();

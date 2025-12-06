@@ -9,14 +9,14 @@ from contextlib import asynccontextmanager
 from .config import settings
 from .services.vector_store import vector_store_service
 from .services.session_manager import session_manager
-from .api import query, health, ingest
+from .api import query, health, ingest, auth
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
-    print("🚀 Starting RAG Chatbot Backend...")
+    print("Starting RAG Chatbot Backend...")
     print(f"Environment: {settings.environment}")
     print(f"Model: {settings.model_name}")
 
@@ -24,18 +24,27 @@ async def lifespan(app: FastAPI):
     try:
         session_manager.create_tables()
     except Exception as e:
-        print(f"⚠️  Database initialization warning: {e}")
+        print(f"WARNING: Database initialization warning: {e}")
+
+    # Initialize auth tables (users, sessions)
+    try:
+        from .models.user import Base
+        from .services.auth_service import engine
+        Base.metadata.create_all(engine)
+        print("Auth tables initialized")
+    except Exception as e:
+        print(f"WARNING: Auth tables initialization: {e}")
 
     # Create Qdrant collection if needed
     try:
         vector_store_service.create_collection()
     except Exception as e:
-        print(f"⚠️  Qdrant collection warning: {e}")
+        print(f"WARNING: Qdrant collection warning: {e}")
 
     yield
 
     # Shutdown
-    print("👋 Shutting down RAG Chatbot Backend...")
+    print("Shutting down RAG Chatbot Backend...")
 
 
 # Create FastAPI app
@@ -59,6 +68,7 @@ app.add_middleware(
 app.include_router(query.router, prefix="/api", tags=["query"])
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(ingest.router, prefix="/api", tags=["ingest"])
+app.include_router(auth.router, tags=["authentication"])  # Auth already has /api/auth prefix
 
 
 @app.get("/")

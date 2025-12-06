@@ -2,20 +2,23 @@
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-dotenv==1.0.0
-pydantic==2.5.3
-pydantic-settings==2.1.0
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
 
 # OpenAI Agents SDK with Gemini support
 openai==1.10.0
 openai-agents==0.1.0
 
 # Vector database
-qdrant-client==1.7.0
+qdrant-client==1.11.3
 
 # PostgreSQL
-psycopg2-binary==2.9.9
 asyncpg==0.29.0
 sqlalchemy==2.0.25
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
 
 # Text processing
 langchain-text-splitters==0.0.1

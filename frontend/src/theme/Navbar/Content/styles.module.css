@@ -1,0 +1,49 @@
+.authInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: 1rem;
+}
+
+.profileLink {
+  font-size: 0.9rem;
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.profileLink:hover {
+  background: var(--ifm-color-emphasis-100);
+  text-decoration: none;
+}
+
+.signOutButton {
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.signOutButton:hover {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-primary);
+}
+
+/* Hide default Sign Up/Sign In buttons when authenticated */
+:global(.navbar-signup-button),
+:global(.navbar__item[href='/signin']) {
+  display: inline-flex;
+}
+
+:global(html[data-authenticated='true']) :global(.navbar-signup-button),
+:global(html[data-authenticated='true']) :global(.navbar__item[href='/signin']) {
+  display: none;
+}

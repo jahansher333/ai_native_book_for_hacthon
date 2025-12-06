@@ -50,6 +50,11 @@ class Settings(BaseSettings):
     top_k_results: int = Field(default=5, env="TOP_K_RESULTS")
     similarity_threshold: float = Field(default=0.3, env="SIMILARITY_THRESHOLD")
 
+    # JWT Authentication Settings
+    jwt_secret: str = Field(..., env="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
+    jwt_expiration_days: int = Field(default=7, env="JWT_EXPIRATION_DAYS")
+
     class Config:
         env_file = ".env"
         case_sensitive = False

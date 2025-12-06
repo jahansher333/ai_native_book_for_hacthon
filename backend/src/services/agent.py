@@ -155,9 +155,19 @@ Please answer the question using both the selected text context and relevant inf
         }
 
     except Exception as e:
-        # Return error response
+        error_message = str(e)
+
+        # Check for rate limit errors (429)
+        if "429" in error_message or "quota" in error_message.lower() or "rate" in error_message.lower():
+            return {
+                "answer": "⚠️ API rate limit exceeded. The Gemini API has reached its quota limit. Please try again in a minute or contact the administrator to upgrade the API plan. For more info, visit: https://ai.google.dev/gemini-api/docs/rate-limits",
+                "citations": [],
+                "confidence": 0.0
+            }
+
+        # Return generic error response
         return {
-            "answer": f"I encountered an error while processing your question: {str(e)}. Please try rephrasing your question or contact support if the issue persists.",
+            "answer": f"I encountered an error while processing your question: {error_message}. Please try rephrasing your question or contact support if the issue persists.",
             "citations": [],
             "confidence": 0.0
         }
