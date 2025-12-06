@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from '../../css/auth.module.css';
+import Link from '@docusaurus/Link';
 
 interface ProfileData {
   hasRTX: boolean | null;
@@ -52,7 +53,7 @@ export default function SignupForm() {
     }
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch('http://localhost:8000/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -80,8 +81,8 @@ export default function SignupForm() {
       localStorage.setItem('user_profile', JSON.stringify(data.user.profile));
       localStorage.setItem('user_email', data.user.email);
 
-      // Redirect to intro with personalization
-      window.location.href = '/docs/intro?personalized=true';
+      // Redirect to docs after successful signup
+      window.location.href = '/docs/intro';
 
     } catch (err) {
       setError('Network error. Please try again.');

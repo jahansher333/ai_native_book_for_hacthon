@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@theme/Layout';
 import SignupForm from '../components/Auth/SignupForm';
 
 export default function SignupPage() {
+  useEffect(() => {
+    // If user is already logged in, redirect to docs
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      window.location.href = '/docs/intro';
+    }
+  }, []);
+
   return (
     <Layout
       title="Sign Up - Physical AI Textbook"

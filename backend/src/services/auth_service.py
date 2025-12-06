@@ -14,7 +14,12 @@ from ..config import settings
 from ..models.user import User, Base
 
 # Password hashing context (bcrypt with cost factor 12)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# truncate_error: pass password truncation errors through without raising
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__truncate_error=False  # Allow passwords > 72 bytes (they'll be auto-truncated)
+)
 
 # Database connection (reuse existing Neon URL)
 engine = create_engine(settings.neon_database_url)
@@ -25,12 +30,21 @@ class AuthService:
 
     @staticmethod
     def hash_password(password: str) -> str:
-        """Hash password using bcrypt (cost factor 12)"""
+        """Hash password using bcrypt (cost factor 12)
+        Truncates to 72 bytes to comply with bcrypt limitation"""
+        # Bcrypt has 72-byte limit - manually truncate before hashing
+        # This is necessary due to Python 3.14 compatibility issues with passlib
+        if len(password.encode('utf-8')) > 72:
+            # Truncate at byte level, then decode back
+            password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
         return pwd_context.hash(password)
 
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """Verify password against bcrypt hash"""
+        # Match truncation from hash_password
+        if len(plain_password.encode('utf-8')) > 72:
+            plain_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
         return pwd_context.verify(plain_password, hashed_password)
 
     @staticmethod

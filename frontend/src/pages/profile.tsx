@@ -33,7 +33,7 @@ export default function ProfilePage() {
       }
 
       try {
-        const response = await fetch('/api/auth/session', {
+        const response = await fetch('http://localhost:8000/api/auth/session', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

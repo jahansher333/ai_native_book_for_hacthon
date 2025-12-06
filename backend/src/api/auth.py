@@ -51,6 +51,8 @@ async def signup(request: SignupRequest):
     4. Your programming experience? (experience: beginner/intermediate/advanced)
     """
     try:
+        print(f"Signup request received: email={request.email}, profile={request.profile.dict()}")
+
         user, token, expires_at = auth_service.create_user_with_profile(
             email=request.email,
             password=request.password,
@@ -66,11 +68,12 @@ async def signup(request: SignupRequest):
 
     except ValueError as e:
         # Validation errors (duplicate email, invalid profile)
+        print(f"Signup ValueError: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         # Database errors or unexpected issues
-        print(f"Signup error: {e}")
-        raise HTTPException(status_code=500, detail="Signup failed. Please try again.")
+        print(f"Signup unexpected error: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @router.post("/signin", response_model=AuthResponse)

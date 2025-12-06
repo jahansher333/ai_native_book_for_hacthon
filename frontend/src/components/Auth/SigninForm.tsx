@@ -14,7 +14,7 @@ export default function SigninForm() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/signin', {
+      const response = await fetch('http://localhost:8000/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -33,9 +33,8 @@ export default function SigninForm() {
       localStorage.setItem('user_profile', JSON.stringify(data.user.profile));
       localStorage.setItem('user_email', data.user.email);
 
-      // Redirect to last visited page or intro
-      const lastPage = localStorage.getItem('last_page') || '/docs/intro';
-      window.location.href = lastPage;
+      // Redirect to docs intro
+      window.location.href = '/docs/intro';
 
     } catch (err) {
       setError('Network error. Please try again.');
