@@ -3,6 +3,7 @@ RAG Agent using OpenAI Agents SDK with Gemini API
 Implements intelligent retrieval-augmented generation for textbook queries
 """
 import asyncio
+import os
 import re
 from typing import Dict, List, Optional
 from agents import Agent, Runner, function_tool, AsyncOpenAI, OpenAIChatCompletionsModel, set_tracing_disabled
@@ -16,15 +17,19 @@ from .vector_store import vector_store_service
 load_dotenv(override=True)
 set_tracing_disabled(True)
 
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+base_url = os.getenv("BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")    
+
+
 # Initialize Gemini via OpenAI-compatible endpoint
 external_provider = AsyncOpenAI(
-    api_key=settings.gemini_api_key,
-    base_url=settings.base_url
+    api_key=gemini_api_key,
+    base_url=base_url
 )
 
 # Create Gemini model instance
 gemini_model = OpenAIChatCompletionsModel(
-    model=settings.model_name,
+    model="gemini-2.0-flash-exp",
     openai_client=external_provider
 )
 
@@ -104,6 +109,11 @@ Example citation format:
     model=gemini_model
 )
 
+# Test code commented out - cannot run at module level with uvicorn event loop
+# run = Runner.run_sync(
+#     rag_agent,
+#     "What are the advantages of using NVIDIA Isaac Sim for robotics simulation compared to traditional simulators like Gazebo?"
+# )
 
 async def run_rag_agent(
     question: str,

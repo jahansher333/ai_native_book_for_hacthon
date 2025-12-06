@@ -4,7 +4,7 @@ Loads environment variables using Gemini API via OpenAI-compatible endpoint
 """
 import os
 from typing import List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from dotenv import load_dotenv
 
@@ -55,9 +55,11 @@ class Settings(BaseSettings):
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     jwt_expiration_days: int = Field(default=7, env="JWT_EXPIRATION_DAYS")
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="ignore"  # Ignore extra fields from .env
+    )
 
     def get_cors_origins(self) -> List[str]:
         """Parse CORS origins from comma-separated string"""
