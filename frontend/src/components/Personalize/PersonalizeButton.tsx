@@ -44,13 +44,6 @@ export default function PersonalizeButton({
           </button>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes gradientShift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-      `}</style>
     </div>
   );
 }
