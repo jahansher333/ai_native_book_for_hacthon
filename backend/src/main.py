@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from .config import settings
 from .services.vector_store import vector_store_service
 from .services.session_manager import session_manager
-from .api import query, health, ingest, auth, personalize
+from .api import query, health, ingest, auth, personalize, translate
 
 
 @asynccontextmanager
@@ -70,6 +70,7 @@ app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(ingest.router, prefix="/api", tags=["ingest"])
 app.include_router(auth.router, tags=["authentication"])  # Auth already has /api/auth prefix
 app.include_router(personalize.router, tags=["personalization"])  # Personalize endpoint
+app.include_router(translate.router, tags=["translation"])  # Urdu translation endpoint
 
 
 @app.get("/")
