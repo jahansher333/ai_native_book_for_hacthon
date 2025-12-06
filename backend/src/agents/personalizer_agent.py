@@ -3,16 +3,21 @@ Personalizer Agent Integration
 
 This module integrates with the @personalizer subagent from the 8-agent system
 to personalize educational content based on user profiles.
+
+Uses OpenAI Agents SDK with Gemini 2.0 Flash for fast, cost-effective personalization.
 """
 
-import anthropic
+from openai import OpenAI
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Initialize Claude API client
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+# Initialize OpenAI client configured for Gemini
+client = OpenAI(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
 
 async def personalize_chapter_content(
     original_content: str,
@@ -177,23 +182,24 @@ pub = node.create_publisher(String, 'topic', qos)
 Return ONLY the personalized MDX content. Do NOT include explanations or meta-commentary about the changes.
 """
 
-    logger.info(f"Calling Claude API for personalization (experience={user_profile['experience']})")
+    logger.info(f"Calling Gemini 2.0 Flash for personalization (experience={user_profile['experience']})")
 
     try:
-        # Call Claude API with personalization prompt
-        message = client.messages.create(
-            model="claude-opus-4",
-            max_tokens=8000,
+        # Call Gemini via OpenAI SDK with personalization prompt
+        response = client.chat.completions.create(
+            model="gemini-2.0-flash-exp",
             messages=[
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            max_tokens=8000,
+            temperature=0.7
         )
 
-        personalized_content = message.content[0].text
+        personalized_content = response.choices[0].message.content
         logger.info(f"Successfully personalized chapter {chapter_id}")
 
         return personalized_content
 
     except Exception as e:
-        logger.error(f"Claude API error: {str(e)}")
+        logger.error(f"Gemini API error: {str(e)}")
         raise Exception(f"AI personalization failed: {str(e)}")

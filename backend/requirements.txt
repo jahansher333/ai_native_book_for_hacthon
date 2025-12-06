@@ -9,9 +9,6 @@ pydantic-settings>=2.6.0
 openai==1.10.0
 openai-agents==0.1.0
 
-# Anthropic Claude API
-anthropic>=0.40.0
-
 # Vector database
 qdrant-client==1.11.3
 
