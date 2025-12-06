@@ -13,7 +13,7 @@ interface ChapterWrapperProps {
 export default function ChapterWrapper({
   chapterId,
   children
-}: ChapterWrapperProps): JSX.Element {
+}: ChapterWrapperProps): React.JSX.Element {
   const { isAuthenticated, profile } = useUserProfile();
 
   // Extract original content as string
@@ -42,8 +42,8 @@ export default function ChapterWrapper({
     if (Array.isArray(element)) {
       return element.map(extractText).join('');
     }
-    if (React.isValidElement(element) && element.props.children) {
-      return extractText(element.props.children);
+    if (React.isValidElement(element) && (element.props as any).children) {
+      return extractText((element.props as any).children);
     }
     return '';
   }
