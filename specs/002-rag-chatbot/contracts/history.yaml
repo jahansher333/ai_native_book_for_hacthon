@@ -1,0 +1,216 @@
+openapi: 3.1.0
+info:
+  title: RAG Chatbot History API
+  version: 1.0.0
+  description: API endpoint for retrieving chat session history
+
+servers:
+  - url: https://your-backend.render.com
+    description: Production server (Render)
+  - url: http://localhost:8000
+    description: Development server
+
+paths:
+  /history/{session_id}:
+    get:
+      summary: Get chat history
+      description: |
+        Retrieve message history for a specific chat session. Used to persist
+        conversation context across page navigations. Returns last 20 messages
+        ordered chronologically.
+
+      operationId: getChatHistory
+
+      tags:
+        - Public
+
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: UUID of the chat session
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of messages to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+
+        - name: before
+          in: query
+          required: false
+          description: Return messages before this timestamp (for pagination)
+          schema:
+            type: string
+            format: date-time
+          example: "2025-12-04T10:30:00Z"
+
+      responses:
+        '200':
+          description: Chat history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - session_id
+                  - messages
+                properties:
+                  session_id:
+                    type: string
+                    format: uuid
+                    description: Session identifier
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+
+                  messages:
+                    type: array
+                    description: Chat messages ordered chronologically
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - role
+                        - content
+                        - created_at
+                      properties:
+                        id:
+                          type: integer
+                          description: Unique message identifier
+                          example: 1
+
+                        role:
+                          type: string
+                          enum: ["user", "assistant"]
+                          description: Message sender role
+
+                        content:
+                          type: string
+                          description: Message text
+                          example: "What is ROS 2?"
+
+                        sources:
+                          type: array
+                          nullable: true
+                          description: Source citations (null for user messages)
+                          items:
+                            type: object
+                            required:
+                              - title
+                              - url
+                              - chunk_id
+                              - score
+                            properties:
+                              title:
+                                type: string
+                                description: Module and chapter title
+                                example: "Module 1 - ROS 2 Fundamentals"
+
+                              url:
+                                type: string
+                                format: uri-reference
+                                description: Relative URL to source
+                                example: "/docs/ros2"
+
+                              chunk_id:
+                                type: integer
+                                description: Qdrant point ID
+                                example: 12345
+
+                              score:
+                                type: number
+                                format: float
+                                description: Similarity score
+                                example: 0.92
+
+                        created_at:
+                          type: string
+                          format: date-time
+                          description: Message timestamp
+                          example: "2025-12-04T10:00:00Z"
+
+                  total_messages:
+                    type: integer
+                    description: Total messages in session (for pagination)
+                    example: 25
+
+                  has_more:
+                    type: boolean
+                    description: Whether more messages exist before the returned set
+                    example: true
+
+              example:
+                session_id: "550e8400-e29b-41d4-a716-446655440000"
+                messages:
+                  - id: 1
+                    role: "user"
+                    content: "What is ROS 2?"
+                    sources: null
+                    created_at: "2025-12-04T10:00:00Z"
+                  - id: 2
+                    role: "assistant"
+                    content: "ROS 2 is the industry-standard middleware for robot systems... [Source: Module 1]"
+                    sources:
+                      - title: "Module 1 - ROS 2 Fundamentals"
+                        url: "/docs/ros2"
+                        chunk_id: 12345
+                        score: 0.92
+                    created_at: "2025-12-04T10:00:05Z"
+                total_messages: 2
+                has_more: false
+
+        '404':
+          description: Session not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Session not found"
+                message: "Chat session 550e8400-e29b-41d4-a716-446655440000 does not exist or has expired"
+
+        '400':
+          description: Invalid session ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid session ID"
+                message: "session_id must be a valid UUID"
+
+        '500':
+          description: Server error during history retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Database error"
+                message: "Failed to retrieve chat history from Neon Postgres"
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error context (optional)

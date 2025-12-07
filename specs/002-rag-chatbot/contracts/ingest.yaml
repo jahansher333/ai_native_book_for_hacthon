@@ -1,0 +1,181 @@
+openapi: 3.1.0
+info:
+  title: RAG Chatbot Ingestion API
+  version: 1.0.0
+  description: API endpoint for ingesting textbook content into Qdrant vector database
+
+servers:
+  - url: https://your-backend.render.com
+    description: Production server (Render)
+  - url: http://localhost:8000
+    description: Development server
+
+paths:
+  /ingest:
+    post:
+      summary: Ingest textbook content
+      description: |
+        Load all MDX files from `/frontend/docs/`, chunk text, generate embeddings,
+        and store in Qdrant Cloud. This endpoint is admin-only and should be run
+        manually after content updates.
+
+      operationId: ingestTextbook
+
+      tags:
+        - Admin
+
+      security:
+        - ApiKeyAuth: []
+
+      requestBody:
+        description: Optional configuration for ingestion (defaults used if omitted)
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chunk_size:
+                  type: integer
+                  default: 1024
+                  minimum: 256
+                  maximum: 4096
+                  description: Maximum characters per chunk
+
+                chunk_overlap:
+                  type: integer
+                  default: 256
+                  minimum: 0
+                  maximum: 1024
+                  description: Overlap between consecutive chunks
+
+                force_reindex:
+                  type: boolean
+                  default: false
+                  description: Delete existing collection and recreate
+
+                modules:
+                  type: array
+                  items:
+                    type: string
+                    enum: ["01-ros2", "02-gazebo-unity", "03-isaac", "04-vla", "hardware", "all"]
+                  default: ["all"]
+                  description: Specific modules to ingest (or "all")
+
+            example:
+              chunk_size: 1024
+              chunk_overlap: 256
+              force_reindex: false
+              modules: ["all"]
+
+      responses:
+        '200':
+          description: Ingestion completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - chunks_ingested
+                  - processing_time_seconds
+                properties:
+                  status:
+                    type: string
+                    enum: ["success"]
+                    description: Ingestion status
+
+                  chunks_ingested:
+                    type: integer
+                    description: Total number of chunks stored in Qdrant
+                    example: 450
+
+                  files_processed:
+                    type: integer
+                    description: Number of MDX files processed
+                    example: 29
+
+                  processing_time_seconds:
+                    type: number
+                    format: float
+                    description: Total ingestion time
+                    example: 45.3
+
+                  breakdown:
+                    type: object
+                    description: Per-module chunk counts
+                    additionalProperties:
+                      type: integer
+                    example:
+                      "01-ros2": 120
+                      "02-gazebo-unity": 80
+                      "03-isaac": 100
+                      "04-vla": 90
+                      "hardware": 60
+
+              example:
+                status: "success"
+                chunks_ingested: 450
+                files_processed: 29
+                processing_time_seconds: 45.3
+                breakdown:
+                  "01-ros2": 120
+                  "02-gazebo-unity": 80
+                  "03-isaac": 100
+                  "04-vla": 90
+                  "hardware": 60
+
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid chunk_size"
+                message: "chunk_size must be between 256 and 4096"
+
+        '401':
+          description: Unauthorized (missing or invalid API key)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Unauthorized"
+                message: "Valid API key required for ingestion"
+
+        '500':
+          description: Server error during ingestion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Ingestion failed"
+                message: "Failed to connect to Qdrant Cloud"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Admin API key for ingestion operations
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error context (optional)
