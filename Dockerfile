@@ -29,8 +29,11 @@ COPY backend /app/backend
 # Set working directory to backend
 WORKDIR /app/backend
 
+# Make start script executable
+RUN chmod +x start.sh
+
 # Expose port (Railway will set $PORT dynamically)
 EXPOSE 8000
 
-# Start command
-CMD uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Start command using shell script for PORT variable support
+CMD ["./start.sh"]
