@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Groq LiteLLM Agent - Railway Backend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .status {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .status-healthy { background: #d4edda; color: #155724; }
+        .status-degraded { background: #fff3cd; color: #856404; }
+        .status-error { background: #f8d7da; color: #721c24; }
+
+        .test-section {
+            padding: 30px;
+        }
+
+        .test-group {
+            margin-bottom: 30px;
+        }
+
+        .test-group h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .response-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .response-box h4 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .response-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #212529;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .citations {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .citation-item {
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example-queries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .example-query {
+            padding: 6px 12px;
+            background: #e9ecef;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .example-query:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .error-box {
+            padding: 15px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            color: #721c24;
+            margin-top: 15px;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Groq LiteLLM Agent Tester</h1>
+            <p>Test Railway backend with Groq API (llama-3.3-70b-versatile)</p>
+        </div>
+
+        <div class="status" id="status">
+            <div class="status-item">
+                <span><strong>Backend Status:</strong></span>
+                <span class="status-badge status-degraded" id="backend-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span><strong>Backend URL:</strong></span>
+                <span id="backend-url">https://web-production-d0418.up.railway.app</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-group">
+                <h3>📝 Test Query</h3>
+
+                <div class="input-group">
+                    <label for="question">Question:</label>
+                    <input type="text" id="question" placeholder="What is ROS2?" />
+                </div>
+
+                <div class="example-queries">
+                    <div class="example-query" onclick="setQuestion('What is ROS2?')">What is ROS2?</div>
+                    <div class="example-query" onclick="setQuestion('Explain Gazebo simulator')">Explain Gazebo</div>
+                    <div class="example-query" onclick="setQuestion('What is Isaac Sim?')">What is Isaac Sim?</div>
+                    <div class="example-query" onclick="setQuestion('How does SLAM work?')">How does SLAM work?</div>
+                </div>
+
+                <div class="input-group">
+                    <label for="selected-text">Selected Text (optional):</label>
+                    <textarea id="selected-text" placeholder="Paste selected text from the textbook here..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="testQuery()" id="test-btn">
+                        🚀 Test Query
+                    </button>
+                    <button class="btn-secondary" onclick="clearResults()">
+                        🗑️ Clear
+                    </button>
+                    <button class="btn-success" onclick="checkHealth()">
+                        ❤️ Check Health
+                    </button>
+                </div>
+
+                <div id="results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'https://web-production-d0418.up.railway.app';
+
+        // Check backend health on load
+        window.addEventListener('load', checkHealth);
+
+        function setQuestion(question) {
+            document.getElementById('question').value = question;
+        }
+
+        async function checkHealth() {
+            const statusBadge = document.getElementById('backend-status');
+            statusBadge.textContent = 'Checking...';
+            statusBadge.className = 'status-badge status-degraded';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`);
+                const data = await response.json();
+
+                if (data.status === 'healthy') {
+                    statusBadge.textContent = '✅ Healthy';
+                    statusBadge.className = 'status-badge status-healthy';
+                } else if (data.status === 'degraded') {
+                    statusBadge.textContent = '⚠️ Degraded (missing API keys)';
+                    statusBadge.className = 'status-badge status-degraded';
+                } else {
+                    statusBadge.textContent = '❌ Unhealthy';
+                    statusBadge.className = 'status-badge status-error';
+                }
+            } catch (error) {
+                statusBadge.textContent = '❌ Connection Failed';
+                statusBadge.className = 'status-badge status-error';
+            }
+        }
+
+        async function testQuery() {
+            const question = document.getElementById('question').value.trim();
+            const selectedText = document.getElementById('selected-text').value.trim();
+            const resultsDiv = document.getElementById('results');
+            const testBtn = document.getElementById('test-btn');
+
+            if (!question) {
+                alert('Please enter a question!');
+                return;
+            }
+
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ Testing...';
+
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Querying Groq LiteLLM Agent...</p></div>';
+
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        mode: selectedText ? 'selected' : 'general',
+                        selected_text: selectedText || null,
+                        session_id: localStorage.getItem('test_session_id') || crypto.randomUUID()
+                    })
+                });
+
+                const latency = Date.now() - startTime;
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Query failed');
+                }
+
+                displayResults(data, latency);
+
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error-box">
+                        <h4>❌ Error</h4>
+                        <p><strong>Message:</strong> ${error.message}</p>
+                        <p style="margin-top: 10px;"><strong>Possible causes:</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>API keys not set in Railway (GROQ_API_KEY, GEMINI_API_KEY)</li>
+                            <li>Qdrant not configured (QDRANT_URL, QDRANT_API_KEY)</li>
+                            <li>Backend service is down</li>
+                        </ul>
+                    </div>
+                `;
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🚀 Test Query';
+            }
+        }
+
+        function displayResults(data, latency) {
+            const resultsDiv = document.getElementById('results');
+
+            let citationsHTML = '';
+            if (data.citations && data.citations.length > 0) {
+                citationsHTML = `
+                    <div class="citations">
+                        <h4>📚 Citations (${data.citations.length}):</h4>
+                        ${data.citations.map((cite, idx) => `
+                            <div class="citation-item">
+                                <strong>[${idx + 1}]</strong> ${cite.module} - ${cite.section}, Page ${cite.page}
+                                ${cite.relevance_score ? `<br/><small>Relevance: ${(cite.relevance_score * 100).toFixed(0)}%</small>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            resultsDiv.innerHTML = `
+                <div class="response-box">
+                    <h4>✅ Response (${latency}ms)</h4>
+                    <div class="response-content">${data.answer || data.response || JSON.stringify(data, null, 2)}</div>
+                    ${citationsHTML}
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6; font-size: 13px; color: #6c757d;">
+                        <strong>Query ID:</strong> <code>${data.query_id || 'N/A'}</code><br/>
+                        <strong>Latency:</strong> <code>${data.latency_ms || latency}ms</code><br/>
+                        <strong>Timestamp:</strong> <code>${data.timestamp || new Date().toISOString()}</code>
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('question').value = '';
+            document.getElementById('selected-text').value = '';
+        }
+    </script>
+</body>
+</html>
