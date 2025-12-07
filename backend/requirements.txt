@@ -4,6 +4,7 @@ uvicorn[standard]==0.27.0
 python-dotenv==1.0.0
 pydantic>=2.10.0
 pydantic-settings>=2.6.0
+email-validator>=2.0.0
 
 # OpenAI SDK and Agents SDK
 openai>=1.12.0
