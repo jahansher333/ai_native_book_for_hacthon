@@ -274,7 +274,59 @@ curl -X POST http://localhost:8000/api/query \
 
 ## Deployment
 
-### Deploy to Render (Free Tier)
+### Deploy to Vercel (Recommended)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/ai_robotics_book&project-name=ai-robotics-backend&root-directory=backend)
+
+#### Manual Deployment Steps
+
+1. **Install Vercel CLI**:
+```bash
+npm install -g vercel
+```
+
+2. **Login to Vercel**:
+```bash
+vercel login
+```
+
+3. **Deploy from backend directory**:
+```bash
+cd backend
+vercel --prod
+```
+
+4. **Set Environment Variables** in Vercel Dashboard:
+   - Go to Project Settings → Environment Variables
+   - Add all required variables:
+     - `GEMINI_API_KEY`
+     - `GROQ_API_KEY`
+     - `QDRANT_URL`
+     - `QDRANT_API_KEY`
+     - `QDRANT_COLLECTION_NAME`
+     - `NEON_DATABASE_URL`
+     - `ENVIRONMENT=production`
+     - `DEBUG=False`
+     - `CORS_ORIGINS` (add your frontend URL)
+
+5. **Verify Deployment**:
+```bash
+curl https://your-backend.vercel.app/api/health
+```
+
+#### Vercel Configuration
+
+The backend includes:
+- `vercel.json` - Vercel serverless configuration
+- `api/index.py` - Serverless function entry point
+- `.vercelignore` - Files to exclude from deployment
+
+**Important Notes**:
+- Vercel free tier: 10s max execution time, 100GB-hours/month
+- Vercel Pro: 60s max execution time (adjust in `vercel.json`)
+- Memory: 1024MB (configurable in `vercel.json`)
+
+### Alternative: Deploy to Render (Free Tier)
 
 1. Create `render.yaml`:
 ```yaml

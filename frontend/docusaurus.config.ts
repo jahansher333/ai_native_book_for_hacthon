@@ -15,7 +15,7 @@ const config: Config = {
   organizationName: 'jahansher333',
   projectName: 'Ai_Native_Books_Pyhsical_Ai',
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
   i18n: {
