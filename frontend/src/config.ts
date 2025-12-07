@@ -3,8 +3,8 @@
  * Centralized API endpoint configuration
  */
 
-// Backend API URL - use environment variable or default to production backend
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://ai-robotics-backend.vercel.app';
+// Backend API URL - use environment variable or default to Railway backend
+export const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://web-production-d0418.up.railway.app';
 
 // API Endpoints
 export const API_ENDPOINTS = {
