@@ -9,7 +9,7 @@ const config: Config = {
   tagline: 'From Digital Twins to Autonomous Humanoids',
   favicon: 'img/favicon.ico',
 
-  url: 'https://jahansher333.github.io',
+  url: 'https://ai-native-books-pyhsical-ai.vercel.app',
   baseUrl: '/',
 
   organizationName: 'jahansher333',
