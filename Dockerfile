@@ -1,13 +1,25 @@
 # Use Python 3.11 slim image
 FROM python:3.11-slim
 
+# Install system dependencies including git and build tools
+RUN apt-get update && apt-get install -y \
+    git \
+    gcc \
+    g++ \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+    cargo \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set working directory
 WORKDIR /app
 
 # Copy backend requirements first for better caching
 COPY backend/requirements.txt /app/backend/requirements.txt
 
-# Install dependencies
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r /app/backend/requirements.txt
 
