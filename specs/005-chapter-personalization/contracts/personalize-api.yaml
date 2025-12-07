@@ -1,0 +1,276 @@
+openapi: 3.0.3
+info:
+  title: Chapter Personalization API
+  description: API for personalizing textbook chapters based on user profiles
+  version: 1.0.0
+  contact:
+    name: Physical AI Textbook Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.physical-ai-book.example.com
+    description: Production
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/personalize/chapter:
+    post:
+      summary: Personalize a chapter
+      description: |
+        Personalizes educational chapter content based on user profile.
+        Requires authentication (JWT token).
+        Returns rewritten chapter tailored to user's experience level and hardware setup.
+      operationId: personalizeChapter
+      tags:
+        - Personalization
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalizeChapterRequest'
+            examples:
+              beginnerNoHardware:
+                summary: Beginner with no hardware
+                value:
+                  chapterId: "chapter-1-intro"
+                  originalContent: "# Introduction to ROS 2\n\nROS 2 is a robot operating system..."
+                  userProfile:
+                    experience: "beginner"
+                    hasRTX: false
+                    hasJetson: false
+                    hasRobot: false
+              advancedWithJetson:
+                summary: Advanced user with Jetson
+                value:
+                  chapterId: "chapter-5-deployment"
+                  originalContent: "# Edge Deployment\n\nDeploy models to edge devices..."
+                  userProfile:
+                    experience: "advanced"
+                    hasRTX: true
+                    hasJetson: true
+                    hasRobot: false
+      responses:
+        '200':
+          description: Personalization successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalizeChapterResponse'
+              examples:
+                success:
+                  summary: Successful personalization
+                  value:
+                    success: true
+                    personalizedContent: "# Introduction to ROS 2 (Personalized for You)\n\nSince you're new to robotics..."
+                    metadata:
+                      generationTime: 12.5
+                      cached: false
+                      modelUsed: "gemini-2.0-flash-exp"
+        '401':
+          description: Unauthorized - Missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notAuthenticated:
+                  summary: Not authenticated
+                  value:
+                    detail: "Not authenticated"
+                invalidToken:
+                  summary: Invalid token
+                  value:
+                    detail: "Invalid authentication"
+        '403':
+          description: Forbidden - User lacks required profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingProfile:
+                  summary: Missing profile data
+                  value:
+                    detail: "User profile incomplete"
+        '422':
+          description: Validation Error - Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+              examples:
+                invalidChapterId:
+                  summary: Invalid chapter ID
+                  value:
+                    detail:
+                      - loc: ["body", "chapterId"]
+                        msg: "Invalid chapter ID format"
+                        type: "value_error"
+                contentTooShort:
+                  summary: Content too short
+                  value:
+                    detail:
+                      - loc: ["body", "originalContent"]
+                        msg: "Content too short (min 100 chars)"
+                        type: "value_error"
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimitExceeded:
+                  summary: Rate limit exceeded
+                  value:
+                    detail: "Rate limit exceeded. Please wait before trying again."
+        '500':
+          description: Internal Server Error - Personalization failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                personalizationFailed:
+                  summary: Personalization error
+                  value:
+                    detail: "Personalization failed: Internal error"
+        '504':
+          description: Gateway Timeout - Personalization took too long
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                timeout:
+                  summary: Request timeout
+                  value:
+                    detail: "Personalization timeout exceeded (60s)"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Better-Auth authentication
+
+  schemas:
+    UserProfile:
+      type: object
+      required:
+        - experience
+        - hasRTX
+        - hasJetson
+        - hasRobot
+      properties:
+        experience:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          description: User's programming/robotics experience level
+        hasRTX:
+          type: boolean
+          description: User has access to RTX GPU
+        hasJetson:
+          type: boolean
+          description: User has access to NVIDIA Jetson device
+        hasRobot:
+          type: boolean
+          description: User has access to real robot hardware
+
+    PersonalizeChapterRequest:
+      type: object
+      required:
+        - chapterId
+        - originalContent
+        - userProfile
+      properties:
+        chapterId:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          description: Unique chapter identifier
+          example: "chapter-1-intro"
+        originalContent:
+          type: string
+          minLength: 100
+          maxLength: 50000
+          description: Original chapter content (HTML/markdown)
+          example: "# Introduction to ROS 2\n\nROS 2 is..."
+        userProfile:
+          $ref: '#/components/schemas/UserProfile'
+
+    PersonalizationMetadata:
+      type: object
+      required:
+        - generationTime
+        - cached
+      properties:
+        generationTime:
+          type: number
+          format: float
+          description: Time taken to generate personalized content (seconds)
+          example: 12.5
+        cached:
+          type: boolean
+          description: Whether result was served from cache
+          example: false
+        modelUsed:
+          type: string
+          description: AI model used for personalization
+          example: "gemini-2.0-flash-exp"
+
+    PersonalizeChapterResponse:
+      type: object
+      required:
+        - success
+        - personalizedContent
+        - metadata
+      properties:
+        success:
+          type: boolean
+          description: Whether personalization succeeded
+          example: true
+        personalizedContent:
+          type: string
+          description: Rewritten chapter content tailored to user
+          example: "# Introduction to ROS 2 (Personalized for You)\n\n..."
+        metadata:
+          $ref: '#/components/schemas/PersonalizationMetadata'
+
+    Error:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Not authenticated"
+
+    ValidationError:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  type: string
+                description: Location of validation error
+              msg:
+                type: string
+                description: Validation error message
+              type:
+                type: string
+                description: Error type

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class TranslationRequest(BaseModel):
-    chapterId: str = Field(..., pattern=r'^[a-z0-9-]+$', min_length=3, max_length=100)
+    chapterId: str = Field(..., pattern=r'^[a-zA-Z0-9-_/]+$', min_length=1, max_length=200)
     originalContent: str = Field(..., min_length=100, max_length=50000)
 
 
@@ -34,8 +34,8 @@ async def translate_chapter(request: TranslationRequest):
     try:
         logger.info(f"Translation request for chapter {request.chapterId}")
 
-        # Import translator agent function
-        from ..agents.urdu_translator_agent import translate_chapter_to_urdu
+        # Import translator agent function (LiteLLM/Groq)
+        from ..ai_agents.litellm_converted.urdu_translator import translate_chapter_to_urdu
 
         # Call @urdu-translator subagent
         translated_content = await translate_chapter_to_urdu(

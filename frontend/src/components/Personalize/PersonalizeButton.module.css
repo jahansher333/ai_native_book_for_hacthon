@@ -1,0 +1,145 @@
+.container {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.button.loading {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+.button.personalized {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.icon,
+.checkmark {
+  font-size: 1.2rem;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #fed7d7;
+  color: #c53030;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  border-left: 4px solid #f56565;
+}
+
+.errorIcon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.retryButton {
+  margin-left: auto;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c53030;
+  background-color: white;
+  border: 1px solid #c53030;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  background-color: #c53030;
+  color: white;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .button {
+    color: #f7fafc;
+  }
+
+  .error {
+    background-color: #742a2a;
+    color: #feb2b2;
+    border-left-color: #fc8181;
+  }
+
+  .retryButton {
+    color: #feb2b2;
+    background-color: #4a5568;
+    border-color: #fc8181;
+  }
+
+  .retryButton:hover {
+    background-color: #fc8181;
+    color: #1a202c;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .button {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.95rem;
+    padding: 0.65rem 1.25rem;
+  }
+
+  .error {
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+  }
+
+  .retryButton {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}

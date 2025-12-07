@@ -1,0 +1,4 @@
+{
+  "chapterId": "test-01",
+  "originalContent": "# ROS 2 Introduction\n\nROS 2 is the Robot Operating System version 2. It is modern middleware for robot communication. The Jetson Orin Nano development kit costs $249 and provides excellent performance for edge robotics applications. ROS 2 uses DDS middleware which enables real-time communication between robot components."
+}

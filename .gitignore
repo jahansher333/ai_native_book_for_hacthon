@@ -114,3 +114,7 @@ frontend/build/
 frontend/dist/
 frontend/.docusaurus/
 frontend/.cache-loader/
+
+# Exclude documentation with API key examples
+history/prompts/007-litellm-groq-agents/
+specs/007-litellm-groq-agents/

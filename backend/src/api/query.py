@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Optional
 
 from ..models.queries import QueryRequest, QueryResponse, Citation
-from ..services.agent import run_rag_agent
+from ..ai_agents.litellm_converted.rag_agent import run_rag_agent
 from ..services.session_manager import session_manager
 
 router = APIRouter()
@@ -21,7 +21,7 @@ async def query(request: QueryRequest):
 
     This endpoint:
     1. Retrieves relevant textbook content based on the question
-    2. Uses OpenAI Agents SDK with Gemini to generate an accurate answer
+    2. Uses OpenAI Agents SDK with LiteLLM/Groq to generate an accurate answer
     3. Returns the answer with source citations
     4. Logs the query and response to the database
 

@@ -1,0 +1,12 @@
+/**
+ * Styles for swizzled DocItem Layout component
+ * These styles are compatible with the default Docusaurus theme
+ */
+
+.docItemContainer {
+  max-width: 100%;
+}
+
+.docItemCol {
+  max-width: 100% !important;
+}

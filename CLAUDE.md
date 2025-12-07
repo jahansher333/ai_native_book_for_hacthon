@@ -210,4 +210,9 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
 
 ## Recent Changes
+- 007-litellm-groq-agents: Added Python 3.11+ (as per constitution)
+- 005-chapter-personalization: Added Python 3.11+ (backend), TypeScript/React 18+ (frontend)
 - 001-docusaurus-textbook: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+
+## Active Technologies
+- Python 3.11+ (as per constitution) (007-litellm-groq-agents)
