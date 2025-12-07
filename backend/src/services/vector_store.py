@@ -15,11 +15,19 @@ class VectorStoreService:
     """Service for Qdrant vector operations"""
 
     def __init__(self):
-        self.client = QdrantClient(
-            url=settings.qdrant_url,
-            api_key=settings.qdrant_api_key
-        )
+        self.client = None
         self.collection_name = settings.qdrant_collection_name
+
+        # Only initialize if credentials are provided
+        if settings.qdrant_url and settings.qdrant_api_key:
+            try:
+                self.client = QdrantClient(
+                    url=settings.qdrant_url,
+                    api_key=settings.qdrant_api_key
+                )
+            except Exception as e:
+                print(f"WARNING: Could not initialize Qdrant client: {e}")
+                self.client = None
 
     def create_collection(self, vector_size: int = 768):
         """

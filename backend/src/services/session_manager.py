@@ -18,8 +18,18 @@ class SessionManager:
 
     def __init__(self):
         self.database_url = settings.neon_database_url
-        self.engine = create_engine(self.database_url)
-        self.Session = sessionmaker(bind=self.engine)
+        self.engine = None
+        self.Session = None
+
+        # Only initialize database if URL is provided
+        if self.database_url and self.database_url.strip():
+            try:
+                self.engine = create_engine(self.database_url)
+                self.Session = sessionmaker(bind=self.engine)
+            except Exception as e:
+                print(f"WARNING: Could not initialize database: {e}")
+                self.engine = None
+                self.Session = None
 
     def create_tables(self):
         """Create all tables if they don't exist"""

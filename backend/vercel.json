@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "name": "ai-robotics-backend",
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "runtime": "python3.11"
+      }
     }
   ],
   "routes": [
@@ -12,16 +15,5 @@
       "src": "/(.*)",
       "dest": "api/index.py"
     }
-  ],
-  "env": {
-    "ENVIRONMENT": "production",
-    "DEBUG": "False",
-    "LOG_LEVEL": "INFO"
-  },
-  "functions": {
-    "api/index.py": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  }
+  ]
 }

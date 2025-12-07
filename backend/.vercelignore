@@ -11,3 +11,14 @@ tests/
 *.sqlite
 .DS_Store
 node_modules/
+*.log
+*.md
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+test_*.py
+test_*.json
+*.bat
+.vercel/

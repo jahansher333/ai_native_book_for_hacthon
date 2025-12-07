@@ -16,29 +16,32 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
 
     # Gemini API via OpenAI-compatible endpoint
-    gemini_api_key: str = Field(..., env="GEMINI_API_KEY")
+    gemini_api_key: str = Field(default="", env="GEMINI_API_KEY")
     base_url: str = Field(
         default="https://generativelanguage.googleapis.com/v1beta/openai/",
         env="BASE_URL"
     )
     model_name: str = Field(default="gemini-2.0-flash-exp", env="MODEL_NAME")
 
+    # Groq API for personalization/translation
+    groq_api_key: str = Field(default="", env="GROQ_API_KEY")
+
     # Qdrant Cloud
-    qdrant_url: str = Field(..., env="QDRANT_URL")
-    qdrant_api_key: str = Field(..., env="QDRANT_API_KEY")
+    qdrant_url: str = Field(default="", env="QDRANT_URL")
+    qdrant_api_key: str = Field(default="", env="QDRANT_API_KEY")
     qdrant_collection_name: str = Field(default="book_vectors", env="QDRANT_COLLECTION_NAME")
 
     # Neon Postgres
-    neon_database_url: str = Field(..., env="NEON_DATABASE_URL")
+    neon_database_url: str = Field(default="", env="NEON_DATABASE_URL")
 
     # Application settings
-    environment: str = Field(default="development", env="ENVIRONMENT")
+    environment: str = Field(default="production", env="ENVIRONMENT")
     debug: bool = Field(default=False, env="DEBUG")
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
 
     # CORS settings
     cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:3001",
+        default="http://localhost:3000,http://localhost:3001,https://ai-native-books-pyhsical-ai-kcpd.vercel.app",
         env="CORS_ORIGINS"
     )
 
@@ -51,7 +54,7 @@ class Settings(BaseSettings):
     similarity_threshold: float = Field(default=0.3, env="SIMILARITY_THRESHOLD")
 
     # JWT Authentication Settings
-    jwt_secret: str = Field(..., env="JWT_SECRET")
+    jwt_secret: str = Field(default="change-this-secret-key-in-production", env="JWT_SECRET")
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     jwt_expiration_days: int = Field(default=7, env="JWT_EXPIRATION_DAYS")
 
