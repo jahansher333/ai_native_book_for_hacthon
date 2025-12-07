@@ -30,8 +30,11 @@ async def lifespan(app: FastAPI):
     try:
         from .models.user import Base
         from .services.auth_service import engine
-        Base.metadata.create_all(engine)
-        print("Auth tables initialized")
+        if engine:
+            Base.metadata.create_all(engine)
+            print("✅ Auth tables initialized")
+        else:
+            print("⚠️  Auth database not configured (NEON_DATABASE_URL not set)")
     except Exception as e:
         print(f"WARNING: Auth tables initialization: {e}")
 

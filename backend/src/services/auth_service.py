@@ -22,8 +22,18 @@ pwd_context = CryptContext(
 )
 
 # Database connection (reuse existing Neon URL)
-engine = create_engine(settings.neon_database_url)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Only initialize if database URL is provided
+engine = None
+SessionLocal = None
+
+if settings.neon_database_url and settings.neon_database_url.strip():
+    try:
+        engine = create_engine(settings.neon_database_url)
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    except Exception as e:
+        print(f"WARNING: Could not initialize auth database: {e}")
+        engine = None
+        SessionLocal = None
 
 class AuthService:
     """Authentication service for signup, signin, session management"""
@@ -90,6 +100,9 @@ class AuthService:
         Returns: (user, token, expiration)
         Raises: ValueError if email exists or profile invalid
         """
+        if not SessionLocal:
+            raise ValueError("Database not configured. Set NEON_DATABASE_URL environment variable.")
+
         # Validate profile structure
         required_keys = ["hasRTX", "hasJetson", "hasRobot", "experience"]
         for key in required_keys:
@@ -142,6 +155,9 @@ class AuthService:
         Authenticate user with email + password
         Returns: (user, token, expiration) if valid, None if invalid
         """
+        if not SessionLocal:
+            raise ValueError("Database not configured. Set NEON_DATABASE_URL environment variable.")
+
         db = SessionLocal()
         try:
             # Find user by email
@@ -168,6 +184,9 @@ class AuthService:
         Get user by JWT token (for session validation)
         Returns: User if token valid, None if invalid/expired
         """
+        if not SessionLocal:
+            return None
+
         payload = AuthService.verify_token(token)
         if not payload:
             return None
