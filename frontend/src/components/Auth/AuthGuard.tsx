@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_ENDPOINTS } from '../../config';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -24,7 +25,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
       try {
         // Verify token with backend
-        const response = await fetch('http://localhost:8000/api/auth/session', {
+        const response = await fetch(API_ENDPOINTS.AUTH_SESSION, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

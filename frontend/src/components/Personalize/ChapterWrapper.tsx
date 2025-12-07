@@ -13,6 +13,7 @@ import DOMPurify from 'dompurify';
 import { usePersonalization } from '../../hooks/usePersonalization';
 import { useUserProfile } from '../../contexts/UserProfileContext';
 import styles from './ChapterWrapper.module.css';
+import { API_ENDPOINTS } from '../../config';
 
 interface ChapterWrapperProps {
   chapterId: string;
@@ -74,7 +75,7 @@ export default function ChapterWrapper({
     setTranslationError(null);
 
     try {
-      const response = await fetch('http://localhost:8001/api/translate/chapter', {
+      const response = await fetch(API_ENDPOINTS.TRANSLATE_CHAPTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

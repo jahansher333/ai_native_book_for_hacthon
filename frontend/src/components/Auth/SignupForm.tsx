@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styles from '../../css/auth.module.css';
 import Link from '@docusaurus/Link';
+import { API_ENDPOINTS } from '../../config';
 
 interface ProfileData {
   hasRTX: boolean | null;
@@ -53,7 +54,7 @@ export default function SignupForm() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/signup', {
+      const response = await fetch(API_ENDPOINTS.AUTH_SIGNUP, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

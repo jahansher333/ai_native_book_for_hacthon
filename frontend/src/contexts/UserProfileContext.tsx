@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API_ENDPOINTS } from '../config';
 
 interface UserProfile {
   hasRTX: boolean;
@@ -46,7 +47,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/session', {
+      const response = await fetch(API_ENDPOINTS.AUTH_SESSION, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

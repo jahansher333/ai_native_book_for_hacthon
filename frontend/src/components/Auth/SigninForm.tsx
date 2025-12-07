@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from '../../css/auth.module.css';
+import { API_ENDPOINTS } from '../../config';
 
 export default function SigninForm() {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ export default function SigninForm() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/signin', {
+      const response = await fetch(API_ENDPOINTS.AUTH_SIGNIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

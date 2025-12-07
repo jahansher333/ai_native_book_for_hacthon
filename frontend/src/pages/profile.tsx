@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@theme/Layout';
 import styles from './profile.module.css';
+import { API_ENDPOINTS } from '../config';
 
 interface UserProfile {
   hasRTX: boolean;
@@ -33,7 +34,7 @@ export default function ProfilePage() {
       }
 
       try {
-        const response = await fetch('http://localhost:8000/api/auth/session', {
+        const response = await fetch(API_ENDPOINTS.AUTH_SESSION, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

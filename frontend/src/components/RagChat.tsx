@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import './RagChat.css';
+import { API_ENDPOINTS } from '../config';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -65,7 +66,7 @@ const RagChat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8001/api/query', {
+      const response = await fetch(API_ENDPOINTS.QUERY, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

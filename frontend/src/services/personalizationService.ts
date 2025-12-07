@@ -4,6 +4,7 @@
  * This service handles all communication with the backend personalization API,
  * including authentication, error handling, and timeout management.
  */
+import { API_ENDPOINTS } from '../config';
 
 export interface UserProfile {
   experience: 'beginner' | 'intermediate' | 'advanced';
@@ -52,7 +53,7 @@ export async function personalizeChapter(
   const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
-    const response = await fetch('http://localhost:8001/api/personalize/chapter', {
+    const response = await fetch(API_ENDPOINTS.PERSONALIZE_CHAPTER, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
