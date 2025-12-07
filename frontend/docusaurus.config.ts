@@ -10,7 +10,7 @@ const config: Config = {
   favicon: 'img/favicon.ico',
 
   url: 'https://jahansher333.github.io',
-  baseUrl: '/Ai_Native_Books_Pyhsical_Ai/',
+  baseUrl: '/',
 
   organizationName: 'jahansher333',
   projectName: 'Ai_Native_Books_Pyhsical_Ai',
@@ -54,27 +54,50 @@ const config: Config = {
         'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
       crossorigin: 'anonymous',
     },
+    {
+      href: 'https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&display=swap',
+      type: 'text/css',
+    },
   ],
 
   themeConfig: {
-    image: 'img/social-card.jpg',
+    image: 'img/download.png',
     navbar: {
       title: 'Physical AI & Humanoid Robotics',
       logo: {
-        alt: 'Physical AI Logo',
-        src: 'img/logo.svg',
-        href: '/docs/intro',
+        alt: 'Physical AI & Robotics Logo',
+        src: 'img/images.png',
+        href: '/',
+        width: 50,
+        height: 50,
       },
+      hideOnScroll: false,
       items: [
         {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Textbook',
+          label: '📚 Textbook',
+        },
+        {
+          to: '/',
+          label: '🏠 Home',
+          position: 'left',
         },
         {
           href: 'https://github.com/jahansher333/Ai_Native_Books_Pyhsical_Ai',
           label: 'GitHub',
+          position: 'right',
+        },
+        {
+          to: '/signup',
+          label: '🚀 Sign Up',
+          position: 'right',
+          className: 'navbar-cta',
+        },
+        {
+          to: '/signin',
+          label: 'Sign In',
           position: 'right',
         },
       ],

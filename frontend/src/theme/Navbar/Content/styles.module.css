@@ -1,0 +1,251 @@
+/* ============================================
+   AUTH INFO CONTAINER (Refined)
+   ============================================ */
+
+/* Auth info container - positioned higher at top right */
+.authInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: fixed;
+  top: 0.5rem;
+  /* Moved up significantly */
+  right: 1rem;
+  z-index: 2000;
+}
+
+/* ============================================
+   PROFILE LINK (Glassmorphism Polish)
+   ============================================ */
+
+/* Profile link with gradient hover - Floating design */
+.profileLink {
+  font-size: 0.95rem;
+  /* Slightly larger font */
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.7rem 1.4rem;
+  /* Adjusted padding */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  border-radius: 16px;
+  /* Larger border radius for modern look */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Enhanced Glassmorphism: Lighter fill, clearer border */
+  background: rgba(59, 130, 246, 0.1);
+  /* Reduced background opacity */
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  /* Thinner, lighter border */
+
+  white-space: nowrap;
+  backdrop-filter: blur(15px);
+  /* Increased blur */
+
+  /* Refined Shadow - Subtle lift, strong inner glow */
+  box-shadow:
+    0 4px 15px rgba(59, 130, 246, 0.15),
+    inset 0 0 10px rgba(59, 130, 246, 0.1);
+  /* Inner glow for glass */
+}
+
+.profileLink:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+  text-decoration: none;
+  transform: translateY(-4px);
+  /* Stronger lift */
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+  /* Stronger outer glow */
+  border-color: var(--color-accent-purple);
+  /* Assuming purple accent is defined */
+}
+
+[data-theme='dark'] .profileLink {
+  background: rgba(96, 165, 250, 0.05);
+  /* Very subtle dark background */
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  box-shadow: 0 4px 15px rgba(96, 165, 250, 0.1);
+}
+
+[data-theme='dark'] .profileLink:hover {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.1), rgba(0, 255, 135, 0.1));
+  /* Neon accent in dark mode */
+  border-color: var(--color-accent-green-cyber, #00ff87);
+}
+
+
+/* ============================================
+   PREMIUM SIGN OUT BUTTON (Icon & Hover Polish)
+   ============================================ */
+
+/* Premium Sign Out Button - Floating outside navbar */
+.signOutButton {
+  font-size: 0.95rem;
+  /* Consistent font size */
+  padding: 0.75rem 1.8rem;
+  min-width: 130px;
+  /* Slightly wider button */
+  min-height: 48px;
+  /* Slightly taller for better touch target */
+  border: none;
+
+  /* New Cyber Red Gradient for more impact */
+  background: linear-gradient(135deg, #FF5757 0%, #E73A4F 50%, #B90E2D 100%);
+  background-size: 200% 100%;
+  color: white;
+  border-radius: 16px;
+  /* Consistent large radius */
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  /* Tighter letter spacing */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Refined 3D Shadow/Glow */
+  box-shadow:
+    0 8px 30px rgba(255, 87, 87, 0.6),
+    /* Stronger red glow */
+    0 4px 10px rgba(0, 0, 0, 0.2),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.25);
+  /* Deeper inner bevel */
+
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+/* Icon (Using Docusaurus theme icon for 'Logout') */
+.signOutButton::before {
+  content: '⏻';
+  /* Unicode for Power/Logout icon (U+23FB) or use Docusaurus icon class */
+  margin-right: 0.6rem;
+  /* Increased separation */
+  font-size: 1.2em;
+  /* Larger icon */
+  font-weight: 700;
+  transition: transform 0.3s ease;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Shimmer effect overlay - Simplified and more subtle */
+.signOutButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  /* Start further left */
+  width: 150%;
+  /* Wider width */
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      /* Brighter shimmer */
+      transparent);
+  transition: left 0.6s ease-in-out;
+  /* Slower, smoother shimmer */
+  z-index: 2;
+  /* Put shimmer over the text content */
+}
+
+/* Hover state */
+.signOutButton:hover {
+  background: linear-gradient(135deg, #B90E2D 0%, #E73A4F 50%, #FF5757 100%);
+  /* Reverse gradient */
+  background-position: 100% 0;
+  transform: translateY(-5px) scale(1.07);
+  /* More dramatic hover */
+  box-shadow:
+    0 12px 40px rgba(255, 87, 87, 0.8),
+    /* Max glow */
+    0 4px 15px rgba(0, 0, 0, 0.2),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Shimmer animation on hover */
+.signOutButton:hover::after {
+  left: 150%;
+  /* Moves across the button */
+}
+
+/* Arrow moves on hover (Now a power icon) */
+.signOutButton:hover::before {
+  transform: translateX(-4px);
+  /* Subtle shift *into* the button, simulating the link breaking */
+}
+
+/* Active/pressed state */
+.signOutButton:active {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow:
+    0 3px 12px rgba(255, 87, 87, 0.5),
+    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.1s ease;
+}
+
+/* Dark mode adjustments (Enhanced Neon Glow) */
+[data-theme='dark'] .signOutButton {
+  background: linear-gradient(135deg, #FF5757 0%, #E73A4F 50%, #B90E2D 100%);
+  box-shadow:
+    0 4px 20px rgba(255, 0, 0, 0.6),
+    /* More red-focused neon glow */
+    0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .signOutButton:hover {
+  box-shadow:
+    0 10px 40px rgba(255, 0, 0, 0.9),
+    0 4px 12px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 0, 0, 0.5);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN (Kept largely the same - excellent foundation)
+   ============================================ */
+
+@media (max-width: 996px) {
+  .authInfo {
+    /* Reset position for mobile */
+    position: static;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem auto;
+    width: 90%;
+    padding: 1rem;
+    border-top: 1px solid var(--ifm-color-emphasis-200);
+    border-radius: 16px;
+  }
+
+  /* Make containers full width */
+  .profileLink,
+  .signOutButton {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* ============================================
+   GLOBAL AUTH TOGGLES (Fixed)
+   ============================================ */
+
+/* Hide default Sign Up/Sign In buttons when authenticated */
+/* Corrected selector for global context */
+:global(.navbar-signup-button),
+:global(.navbar__item[href*='/signin']) {
+  display: inline-flex;
+}
+
+/* Use a more robust selector that checks for an attribute on the HTML tag
+   which should be set by JavaScript when the user is logged in. */
+html[data-authenticated='true'] :global(.navbar-signup-button),
+html[data-authenticated='true'] :global(.navbar__item[href*='/signin']) {
+  display: none;
+}
