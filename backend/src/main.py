@@ -16,30 +16,34 @@ from .api import query, health, ingest, auth, personalize, translate
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     # Startup
-    print("Starting RAG Chatbot Backend...")
+    print("Starting RAG Chatbot Backend with LiteLLM/Groq...")
     print(f"Environment: {settings.environment}")
     print(f"Model: {settings.model_name}")
 
-    # Initialize database tables
-    try:
-        session_manager.create_tables()
-    except Exception as e:
-        print(f"WARNING: Database initialization warning: {e}")
+    # TEMPORARILY DISABLED for testing LiteLLM integration
+    # These can be re-enabled after verifying Groq agents work
+    print("NOTICE: Database/Qdrant initialization temporarily disabled for LiteLLM testing")
 
-    # Initialize auth tables (users, sessions)
-    try:
-        from .models.user import Base
-        from .services.auth_service import engine
-        Base.metadata.create_all(engine)
-        print("Auth tables initialized")
-    except Exception as e:
-        print(f"WARNING: Auth tables initialization: {e}")
+    # # Initialize database tables
+    # try:
+    #     session_manager.create_tables()
+    # except Exception as e:
+    #     print(f"WARNING: Database initialization warning: {e}")
 
-    # Create Qdrant collection if needed
-    try:
-        vector_store_service.create_collection()
-    except Exception as e:
-        print(f"WARNING: Qdrant collection warning: {e}")
+    # # Initialize auth tables (users, sessions)
+    # try:
+    #     from .models.user import Base
+    #     from .services.auth_service import engine
+    #     Base.metadata.create_all(engine)
+    #     print("Auth tables initialized")
+    # except Exception as e:
+    #     print(f"WARNING: Auth tables initialization: {e}")
+
+    # # Create Qdrant collection if needed
+    # try:
+    #     vector_store_service.create_collection()
+    # except Exception as e:
+    #     print(f"WARNING: Qdrant collection warning: {e}")
 
     yield
 

@@ -1,53 +1,137 @@
-interface PersonalizeRequest {
+/**
+ * Personalization Service - API client for chapter personalization
+ *
+ * This service handles all communication with the backend personalization API,
+ * including authentication, error handling, and timeout management.
+ */
+
+export interface UserProfile {
+  experience: 'beginner' | 'intermediate' | 'advanced';
+  hasRTX: boolean;
+  hasJetson: boolean;
+  hasRobot: boolean;
+}
+
+export interface PersonalizeChapterRequest {
   chapterId: string;
   originalContent: string;
-  userProfile: {
-    experience: 'beginner' | 'intermediate' | 'advanced';
-    hasRTX: boolean;
-    hasJetson: boolean;
-    hasRobot: boolean;
-  };
+  userProfile: UserProfile;
 }
 
-interface PersonalizeResponse {
+export interface PersonalizationMetadata {
+  generationTime: number;
+  cached: boolean;
+  modelUsed?: string;
+}
+
+export interface PersonalizeChapterResponse {
   success: boolean;
   personalizedContent: string;
-  metadata: {
-    generationTime: number;
-    cached: boolean;
-  };
+  metadata: PersonalizationMetadata;
 }
 
+/**
+ * Personalize a chapter using the backend API
+ *
+ * @param request - Personalization request containing chapter content and user profile
+ * @returns Personalized chapter response
+ * @throws Error with specific message based on HTTP status code
+ */
 export async function personalizeChapter(
-  request: PersonalizeRequest
-): Promise<PersonalizeResponse> {
+  request: PersonalizeChapterRequest
+): Promise<PersonalizeChapterResponse> {
+  // Get JWT token from localStorage
   const token = localStorage.getItem('auth_token');
 
   if (!token) {
-    throw new Error('Authentication required. Please log in.');
+    throw new Error('Not authenticated. Please log in to personalize chapters.');
   }
 
-  const response = await fetch('http://localhost:8000/api/personalize/chapter', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(request)
-  });
+  // Create AbortController for 60-second timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-  if (response.status === 401) {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_profile');
-    localStorage.removeItem('user_email');
-    window.location.href = '/signin';
-    throw new Error('Session expired. Please log in again.');
+  try {
+    const response = await fetch('http://localhost:8001/api/personalize/chapter', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    // Handle different HTTP status codes
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      const errorMessage = errorData.detail || response.statusText;
+
+      switch (response.status) {
+        case 401:
+          localStorage.removeItem('auth_token'); // Clear invalid token
+          throw new Error('Session expired, please log in again');
+
+        case 403:
+          throw new Error('Permission denied. Please complete your profile.');
+
+        case 422:
+          throw new Error(`Invalid request: ${errorMessage}`);
+
+        case 429:
+          throw new Error('Too many requests. Please wait before trying again.');
+
+        case 504:
+          throw new Error('Personalization took too long. Try a shorter chapter.');
+
+        case 500:
+        default:
+          throw new Error('Something went wrong. Please retry.');
+      }
+    }
+
+    const data: PersonalizeChapterResponse = await response.json();
+
+    if (!data.success || !data.personalizedContent) {
+      throw new Error('Invalid response from server');
+    }
+
+    return data;
+
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    // Handle timeout
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Personalization took too long (timeout after 60s). Try a shorter chapter.');
+    }
+
+    // Handle network errors
+    if (error instanceof TypeError) {
+      throw new Error('Network error. Please check your connection.');
+    }
+
+    // Re-throw known errors
+    throw error;
   }
+}
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Personalization failed' }));
-    throw new Error(error.detail || 'Personalization failed');
-  }
+/**
+ * Check if user is authenticated
+ *
+ * @returns True if auth token exists in localStorage
+ */
+export function isAuthenticated(): boolean {
+  return !!localStorage.getItem('auth_token');
+}
 
-  return response.json();
+/**
+ * Get JWT token from localStorage
+ *
+ * @returns JWT token or null if not found
+ */
+export function getAuthToken(): string | null {
+  return localStorage.getItem('auth_token');
 }

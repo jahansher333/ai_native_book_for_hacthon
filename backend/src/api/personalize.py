@@ -58,8 +58,8 @@ async def personalize_chapter(
     try:
         logger.info(f"Personalization request from {user_email} for chapter {request.chapterId}")
 
-        # Import personalizer agent function
-        from ..agents.personalizer_agent import personalize_chapter_content
+        # Import personalizer agent function (LiteLLM/Groq)
+        from ..ai_agents.litellm_converted.personalize_agent import personalize_chapter_content
 
         # Call @personalizer subagent
         personalized_content = await personalize_chapter_content(

@@ -1,0 +1,334 @@
+openapi: 3.0.3
+info:
+  title: Urdu Translation API
+  description: |
+    API for translating textbook chapters from English to Urdu.
+
+    This API provides instant, high-quality Urdu translation for technical robotics content,
+    maintaining markdown structure and technical term accuracy.
+
+    **Key Features**:
+    - No authentication required (public endpoint)
+    - 60-second timeout enforcement
+    - Markdown structure preservation
+    - Technical term glossary integration
+    - Bilingual error messages
+
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.production.example.com
+    description: Production server (placeholder)
+
+tags:
+  - name: Translation
+    description: Chapter translation endpoints
+
+paths:
+  /api/translate/chapter:
+    post:
+      tags:
+        - Translation
+      summary: Translate chapter to Urdu
+      description: |
+        Translates a complete chapter from English to Urdu using the @urdu-translator subagent.
+
+        **Process**:
+        1. Validate request (chapterId format, content length)
+        2. Initialize Urdu Translator Agent (OpenAI Agents SDK)
+        3. Execute translation skill with 60-second timeout
+        4. Validate markdown structure preservation
+        5. Return translated content
+
+        **Caching**:
+        - Frontend caches responses in localStorage (7-day TTL)
+        - Backend does not cache in MVP (future enhancement)
+
+        **Rate Limiting**:
+        - Not enforced in MVP (no authentication)
+        - Future: IP-based rate limiting (10 req/hour)
+
+      operationId: translateChapter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationRequest'
+            examples:
+              ros2-intro:
+                summary: ROS 2 Introduction Chapter
+                value:
+                  chapterId: "ros2-intro"
+                  originalContent: |
+                    # Introduction to ROS 2
+
+                    ROS 2 (Robot Operating System 2) is a flexible framework for writing robot software...
+
+                    ## Publisher and Subscriber
+
+                    The most common communication pattern in ROS 2 is the publisher-subscriber model...
+
+              short-chapter:
+                summary: Minimal valid chapter
+                value:
+                  chapterId: "test-chapter"
+                  originalContent: |
+                    # Test Chapter
+
+                    This is a short test chapter with at least 100 characters to pass validation.
+                    It demonstrates the minimum required content length.
+
+      responses:
+        '200':
+          description: Translation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationResponse'
+              examples:
+                success:
+                  summary: Successful translation
+                  value:
+                    chapterId: "ros2-intro"
+                    translatedContent: |
+                      # روبوٹک آپریٹنگ سسٹم 2 کا تعارف
+
+                      روبوٹک آپریٹنگ سسٹم 2 روبوٹ سافٹ ویئر لکھنے کا ایک لچکدار فریم ورک ہے...
+
+                      ## پبلشر اور سبسکرائبر
+
+                      روبوٹک آپریٹنگ سسٹم 2 میں سب سے عام مواصلاتی نمونہ پبلشر-سبسکرائبر ماڈل ہے...
+                    timestamp: 1733587200000
+                    cached: false
+
+        '422':
+          description: Validation error (invalid request payload)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid-chapter-id:
+                  summary: Invalid chapterId format
+                  value:
+                    error: "Invalid chapterId format. Must match pattern: ^[a-z0-9-]+$"
+                    code: "VALIDATION_ERROR"
+
+                content-too-short:
+                  summary: Content too short
+                  value:
+                    error: "Content too short. Minimum 100 characters required."
+                    code: "VALIDATION_ERROR"
+
+                content-too-long:
+                  summary: Content exceeds maximum length
+                  value:
+                    error: "Content too long. Maximum 50,000 characters allowed."
+                    code: "VALIDATION_ERROR"
+
+        '429':
+          description: Rate limit exceeded or API quota exhausted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                quota-exceeded:
+                  summary: Gemini API quota exhausted
+                  value:
+                    error: "Translation service temporarily unavailable due to quota limits. Please try again in 24 hours."
+                    code: "QUOTA_EXCEEDED"
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                internal-error:
+                  summary: Unexpected server error
+                  value:
+                    error: "An unexpected error occurred during translation. Please try again."
+                    code: "API_ERROR"
+
+        '504':
+          description: Gateway timeout (translation took > 60 seconds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                timeout:
+                  summary: Translation timeout
+                  value:
+                    error: "Translation took too long to complete. Please try translating a shorter chapter or retry."
+                    code: "TIMEOUT"
+
+  /api/translate/health:
+    get:
+      tags:
+        - Translation
+      summary: Health check
+      description: |
+        Simple health check endpoint to verify translation service availability.
+
+        **Returns**:
+        - `status`: "healthy" or "unhealthy"
+        - `gemini_api_available`: Boolean indicating if Gemini API key is configured
+        - `timestamp`: Current server time (Unix epoch)
+
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+                    example: "healthy"
+                  gemini_api_available:
+                    type: boolean
+                    description: Whether Gemini API key is configured
+                    example: true
+                  timestamp:
+                    type: integer
+                    format: int64
+                    description: Server timestamp (Unix epoch milliseconds)
+                    example: 1733587200000
+              examples:
+                healthy:
+                  summary: Service healthy
+                  value:
+                    status: "healthy"
+                    gemini_api_available: true
+                    timestamp: 1733587200000
+
+components:
+  schemas:
+    TranslationRequest:
+      type: object
+      required:
+        - chapterId
+        - originalContent
+      properties:
+        chapterId:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          minLength: 3
+          maxLength: 100
+          description: |
+            Unique identifier for the chapter.
+            Must contain only lowercase letters, numbers, and hyphens.
+          example: "ros2-intro"
+
+        originalContent:
+          type: string
+          minLength: 100
+          maxLength: 50000
+          description: |
+            Full chapter content in English markdown format.
+
+            **Requirements**:
+            - Must be valid markdown
+            - Minimum 100 characters (prevents empty requests)
+            - Maximum 50,000 characters (prevents timeouts)
+            - Should include headings, paragraphs, code blocks, etc.
+
+          example: |
+            # Introduction to ROS 2
+
+            ROS 2 (Robot Operating System 2) is a flexible framework...
+
+    TranslationResponse:
+      type: object
+      required:
+        - chapterId
+        - translatedContent
+        - timestamp
+        - cached
+      properties:
+        chapterId:
+          type: string
+          description: Echo of the requested chapterId
+          example: "ros2-intro"
+
+        translatedContent:
+          type: string
+          description: |
+            Complete chapter translated to Urdu in markdown format.
+
+            **Guarantees**:
+            - Preserves all markdown structure (headings, lists, code blocks, links)
+            - Technical terms follow glossary rules (translation/transliteration/hybrid)
+            - UTF-8 encoded Urdu text
+            - Ready for direct DOM replacement
+
+          example: |
+            # روبوٹک آپریٹنگ سسٹم 2 کا تعارف
+
+            روبوٹک آپریٹنگ سسٹم 2 ایک لچکدار فریم ورک ہے...
+
+        timestamp:
+          type: integer
+          format: int64
+          description: |
+            Unix timestamp (milliseconds) when translation was completed.
+            Used by frontend for cache TTL calculation.
+          example: 1733587200000
+
+        cached:
+          type: boolean
+          description: |
+            Whether this response was served from backend cache.
+            Always `false` in MVP (no backend caching).
+            Future enhancement may introduce backend caching.
+          example: false
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message in English
+          example: "Translation took too long. Please try a shorter chapter."
+
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - API_ERROR
+            - TIMEOUT
+            - QUOTA_EXCEEDED
+            - NETWORK_ERROR
+          description: |
+            Machine-readable error code for frontend error handling.
+
+            **Error Codes**:
+            - `VALIDATION_ERROR`: Invalid request payload (422)
+            - `API_ERROR`: Internal server error (500)
+            - `TIMEOUT`: Translation exceeded 60 seconds (504)
+            - `QUOTA_EXCEEDED`: Gemini API quota exhausted (429)
+            - `NETWORK_ERROR`: Network failure (client-side only)
+
+          example: "TIMEOUT"
+
+  securitySchemes: {}
+  # No authentication required for translation endpoint in MVP
+
+security: []
+# Public API - no authentication
+

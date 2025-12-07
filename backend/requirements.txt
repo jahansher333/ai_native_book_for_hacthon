@@ -9,6 +9,11 @@ pydantic-settings>=2.6.0
 openai==1.10.0
 openai-agents==0.1.0
 
+# LiteLLM for Groq integration
+litellm==1.80.7
+aiohttp>=3.8.0
+fastuuid>=0.8.0
+
 # Vector database
 qdrant-client==1.11.3
 

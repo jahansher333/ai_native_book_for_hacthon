@@ -6,20 +6,69 @@
 .controls {
   display: flex;
   gap: 1rem;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 
+/* Unified button base styles */
+.personalizeButton,
+.urduButton,
 .resetButton {
   padding: 0.75rem 1.25rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #4a5568;
-  background-color: #e2e8f0;
-  border: 1px solid #cbd5e0;
+  border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+/* Personalize button */
+.personalizeButton {
+  color: white;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+}
+
+.personalizeButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3);
+}
+
+.personalizeButton.active {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  box-shadow: 0 2px 4px rgba(72, 187, 120, 0.2);
+}
+
+/* Urdu button */
+.urduButton {
+  color: white;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+}
+
+.urduButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
+}
+
+.urduButton.active {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  box-shadow: 0 2px 4px rgba(3, 105, 161, 0.2);
+}
+
+/* Reset/Restore button */
+.resetButton {
+  color: #4a5568;
+  background-color: #e2e8f0;
+  border: 1px solid #cbd5e0;
 }
 
 .resetButton:hover {
@@ -30,6 +79,29 @@
 
 .resetButton:active {
   transform: translateY(0);
+}
+
+/* Loading state */
+.personalizeButton:disabled,
+.urduButton:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Spinner animation */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .content {
@@ -43,70 +115,29 @@
   border-radius: 4px;
 }
 
-/* Urdu translation button */
-.urduButton {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: white;
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
-}
-
-.urduButton:hover {
-  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
-}
-
-.urduButton:active {
-  transform: translateY(0);
-}
-
-.urduButton:disabled {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* Back to English button */
-.backToEnglishButton {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #4a5568;
-  background-color: #e2e8f0;
-  border: 1px solid #cbd5e0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.backToEnglishButton:hover {
-  background-color: #cbd5e0;
-  border-color: #a0aec0;
-  transform: translateY(-1px);
-}
-
-.backToEnglishButton:active {
-  transform: translateY(0);
-}
-
-/* Urdu badge */
-.urdoBadge {
+/* Badge container */
+.badge {
   display: inline-block;
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
   font-weight: 600;
+  border-radius: 6px;
+}
+
+/* Personalized badge */
+.personalizedBadge {
+  color: white;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+}
+
+/* Urdu badge */
+.urdoBadge {
   color: white;
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  border-radius: 6px;
   box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+  font-family: 'Noto Nastaliq Urdu', serif;
 }
 
 /* Cached badge */
@@ -150,17 +181,20 @@
   border-radius: 6px;
 }
 
+/* Error icon */
+.errorIcon {
+  margin-right: 0.5rem;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  .resetButton,
-  .backToEnglishButton {
+  .resetButton {
     color: #e2e8f0;
     background-color: #4a5568;
     border-color: #2d3748;
   }
 
-  .resetButton:hover,
-  .backToEnglishButton:hover {
+  .resetButton:hover {
     background-color: #2d3748;
     border-color: #1a202c;
   }
@@ -193,10 +227,10 @@
     gap: 0.75rem;
   }
 
-  .resetButton,
+  .personalizeButton,
   .urduButton,
-  .backToEnglishButton {
+  .resetButton {
     width: 100%;
-    text-align: center;
+    justify-content: center;
   }
 }

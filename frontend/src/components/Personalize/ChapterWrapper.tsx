@@ -1,16 +1,16 @@
 /**
- * ChapterWrapper - Wraps chapter content with personalization functionality
+ * ChapterWrapper - Unified wrapper for chapter personalization and Urdu translation
  *
  * This component:
- * - Renders the PersonalizeButton at the top of chapters
- * - Manages personalization state via usePersonalization hook
- * - Replaces chapter DOM with personalized content when available
+ * - Renders THREE buttons: Personalize, Urdu/English, and Loading indicator
+ * - Manages both personalization and translation state
+ * - Uses LiteLLM Groq agents for both features
+ * - Displays comprehensive badge showing active state
  * - Sanitizes HTML with DOMPurify to prevent XSS attacks
  */
 import React, { useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { usePersonalization } from '../../hooks/usePersonalization';
-import PersonalizeButton from './PersonalizeButton';
 import { useUserProfile } from '../../contexts/UserProfileContext';
 import styles from './ChapterWrapper.module.css';
 
@@ -42,6 +42,15 @@ export default function ChapterWrapper({
 
   // Urdu translation handler
   const handleUrduClick = async () => {
+    // Validate originalContent is available and meets minimum length
+    if (!originalContent || originalContent.trim().length < 100) {
+      console.error('[ChapterWrapper] Original content too short:', originalContent?.length || 0);
+      setTranslationError('Chapter content is too short for translation (minimum 100 characters)');
+      return;
+    }
+
+    console.log('[ChapterWrapper] Starting Urdu translation, content length:', originalContent.length);
+
     // Check cache first
     const cacheKey = `urdu_translation_${chapterId}_v1`;
     const cached = localStorage.getItem(cacheKey);
@@ -65,17 +74,22 @@ export default function ChapterWrapper({
     setTranslationError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/translate/chapter', {
+      const response = await fetch('http://localhost:8001/api/translate/chapter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chapterId,
+          chapterId: chapterId.toLowerCase().replace(/[^a-z0-9-_/]/g, '-'),
           originalContent: originalContent
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        // Handle validation errors (422)
+        if (errorData.detail && Array.isArray(errorData.detail)) {
+          const errors = errorData.detail.map((e: any) => e.msg).join(', ');
+          throw new Error(`Validation error: ${errors}`);
+        }
         throw new Error(errorData.detail || 'Translation failed');
       }
 
@@ -139,139 +153,144 @@ export default function ChapterWrapper({
     isAuthenticated
   );
 
-  // If we have Urdu content, render it
-  if (isUrdu && urduContent) {
-    const sanitizedUrduContent = DOMPurify.sanitize(urduContent, {
-      ALLOWED_TAGS: [
-        'p', 'br', 'strong', 'em', 'u', 's', 'sup', 'sub',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'ul', 'ol', 'li',
-        'a', 'code', 'pre',
-        'blockquote', 'hr',
-        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td',
-        'img', 'figure', 'figcaption',
-        'div', 'span', 'section', 'article',
-        'details', 'summary'
-      ],
-      ALLOWED_ATTR: [
-        'href', 'src', 'alt', 'title', 'class', 'id',
-        'target', 'rel', 'width', 'height',
-        'data-*', 'aria-*', 'role'
-      ],
-      ALLOW_DATA_ATTR: true,
-      ALLOW_ARIA_ATTR: true
-    });
+  // Generate badge text based on active state
+  const generateBadgeText = () => {
+    if (isUrdu) {
+      return isFromUrduCache ? 'اردو میں دکھایا جا رہا ہے (Cached) 🇵🇰' : 'اردو میں دکھایا جا رہا ہے 🇵🇰';
+    }
+    if (personalizedContent && profile) {
+      const experienceLabel = profile.experience.charAt(0).toUpperCase() + profile.experience.slice(1);
+      const hardware = [];
+      if (profile.hasJetson) hardware.push('Jetson Owner');
+      if (profile.hasRTX) hardware.push('RTX GPU');
+      if (profile.hasRobot) hardware.push('Robot Owner');
+      const hardwareText = hardware.length > 0 ? ` + ${hardware.join(' + ')}` : '';
+      const cacheIndicator = isFromCache ? ' (Cached)' : '';
+      return `✨ Personalized for ${experienceLabel}${hardwareText}${cacheIndicator}`;
+    }
+    return null;
+  };
 
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.controls}>
+  const badgeText = generateBadgeText();
+
+  // Determine what content to display
+  const displayContent = isUrdu && urduContent ? urduContent : personalizedContent ? personalizedContent : null;
+
+  // Sanitize content if we have any
+  const sanitizedContent = displayContent ? DOMPurify.sanitize(displayContent, {
+    ALLOWED_TAGS: [
+      'p', 'br', 'strong', 'em', 'u', 's', 'sup', 'sub',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li',
+      'a', 'code', 'pre',
+      'blockquote', 'hr',
+      'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td',
+      'img', 'figure', 'figcaption',
+      'div', 'span', 'section', 'article',
+      'details', 'summary'
+    ],
+    ALLOWED_ATTR: [
+      'href', 'src', 'alt', 'title', 'class', 'id',
+      'target', 'rel', 'width', 'height',
+      'data-*', 'aria-*', 'role'
+    ],
+    ALLOW_DATA_ATTR: true,
+    ALLOW_ARIA_ATTR: true
+  }) : null;
+
+  // Unified render with three buttons at top
+  return (
+    <div className={styles.wrapper}>
+      {/* Three-button control bar */}
+      <div className={styles.controls}>
+        {/* Button 1: Personalize (only if logged in) */}
+        {isAuthenticated && profile && (
           <button
-            onClick={handleBackToEnglish}
-            className={styles.backToEnglishButton}
-            aria-label="Switch back to English"
+            onClick={personalizeContent}
+            disabled={isPersonalizing || isTranslating}
+            className={`${styles.personalizeButton} ${personalizedContent ? styles.active : ''} ${isPersonalizing ? styles.loading : ''}`}
+            aria-label="Personalize chapter for your profile"
           >
-            English میں واپس
+            {isPersonalizing ? (
+              <>
+                <span className={styles.spinner}></span>
+                Personalizing...
+              </>
+            ) : personalizedContent ? (
+              <>✓ Personalized</>
+            ) : (
+              <>✨ Personalize for Me</>
+            )}
           </button>
-          {isFromUrduCache && (
-            <span className={styles.cachedBadge}>
-              Cached
-            </span>
+        )}
+
+        {/* Button 2: Urdu Toggle */}
+        <button
+          onClick={isUrdu ? handleBackToEnglish : handleUrduClick}
+          disabled={isTranslating || isPersonalizing}
+          className={`${styles.urduButton} ${isUrdu ? styles.active : ''} ${isTranslating ? styles.loading : ''}`}
+          aria-label={isUrdu ? "Switch back to English" : "Translate to Urdu"}
+        >
+          {isTranslating ? (
+            <>
+              <span className={styles.spinner}></span>
+              Translating...
+            </>
+          ) : isUrdu ? (
+            'English میں واپس'
+          ) : (
+            'اردو میں پڑھیں'
           )}
-        </div>
+        </button>
 
-        <div className={styles.urdoBadge}>
-          اردو میں دکھایا جا رہا ہے 🇵🇰
-        </div>
-
-        <div
-          className={`${styles.content} ${styles.urduContent} markdown`}
-          dangerouslySetInnerHTML={{ __html: sanitizedUrduContent }}
-        />
-      </div>
-    );
-  }
-
-  // If we have personalized content, render it instead of children
-  if (personalizedContent) {
-    const sanitizedContent = DOMPurify.sanitize(personalizedContent, {
-      ALLOWED_TAGS: [
-        'p', 'br', 'strong', 'em', 'u', 's', 'sup', 'sub',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'ul', 'ol', 'li',
-        'a', 'code', 'pre',
-        'blockquote', 'hr',
-        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td',
-        'img', 'figure', 'figcaption',
-        'div', 'span', 'section', 'article',
-        'details', 'summary'
-      ],
-      ALLOWED_ATTR: [
-        'href', 'src', 'alt', 'title', 'class', 'id',
-        'target', 'rel', 'width', 'height',
-        'data-*', 'aria-*', 'role'
-      ],
-      ALLOW_DATA_ATTR: true,
-      ALLOW_ARIA_ATTR: true
-    });
-
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.controls}>
-          <PersonalizeButton
-            onPersonalize={personalizeContent}
-            isLoading={isPersonalizing}
-            error={error}
-            isPersonalized={true}
-            isFromCache={isFromCache}
-          />
+        {/* Button 3: Restore Original (only if personalized OR urdu) */}
+        {(personalizedContent || isUrdu) && (
           <button
-            onClick={resetToDefault}
+            onClick={() => {
+              if (isUrdu) handleBackToEnglish();
+              if (personalizedContent) resetToDefault();
+            }}
             className={styles.resetButton}
             aria-label="Restore original chapter content"
           >
-            Restore Original
+            🔄 Restore Original
           </button>
+        )}
+      </div>
+
+      {/* Badge showing active state */}
+      {badgeText && (
+        <div className={`${styles.badge} ${isUrdu ? styles.urdoBadge : styles.personalizedBadge}`}>
+          {badgeText}
         </div>
+      )}
 
-        <div
-          className={`${styles.content} ${styles.personalized} markdown`}
-          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-        />
-      </div>
-    );
-  }
-
-  // Default: render original content with Urdu and personalize buttons
-  return (
-    <div className={styles.wrapper}>
-      <div className={styles.controls}>
-        <button
-          onClick={handleUrduClick}
-          disabled={isTranslating}
-          className={styles.urduButton}
-          aria-label="Translate to Urdu"
-        >
-          {isTranslating ? 'Translating... / ترجمہ ہو رہا ہے...' : 'اردو میں پڑھیں'}
-        </button>
-
-        <PersonalizeButton
-          onPersonalize={personalizeContent}
-          isLoading={isPersonalizing}
-          error={error}
-          isPersonalized={false}
-          isFromCache={false}
-        />
-      </div>
+      {/* Error messages */}
+      {error && (
+        <div className={styles.errorMessage} role="alert">
+          <span className={styles.errorIcon}>⚠️</span>
+          Personalization failed: {error.message}
+        </div>
+      )}
 
       {translationError && (
-        <div className={styles.errorMessage}>
+        <div className={styles.errorMessage} role="alert">
+          <span className={styles.errorIcon}>⚠️</span>
           Translation failed / ترجمہ ناکام: {translationError}
         </div>
       )}
 
-      <div className={styles.content} ref={contentRef}>
-        {children}
-      </div>
+      {/* Content display */}
+      {sanitizedContent ? (
+        <div
+          className={`${styles.content} ${isUrdu ? styles.urduContent : styles.personalized} markdown`}
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+        />
+      ) : (
+        <div className={styles.content} ref={contentRef}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }

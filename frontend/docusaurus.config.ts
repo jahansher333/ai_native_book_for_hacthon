@@ -63,13 +63,13 @@ const config: Config = {
   themeConfig: {
     image: 'img/download.png',
     navbar: {
-      title: 'Physical AI & Humanoid Robotics',
+      title: 'Physical AI & Robotics',
       logo: {
-        alt: 'Physical AI & Robotics Logo',
+        alt: 'Physical AI Logo',
         src: 'img/images.png',
         href: '/',
-        width: 50,
-        height: 50,
+        width: 45,
+        height: 45,
       },
       hideOnScroll: false,
       items: [
@@ -77,11 +77,11 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: '📚 Textbook',
+          label: 'Textbook',
         },
         {
           to: '/',
-          label: '🏠 Home',
+          label: 'Home',
           position: 'left',
         },
         {
@@ -91,7 +91,7 @@ const config: Config = {
         },
         {
           to: '/signup',
-          label: '🚀 Sign Up',
+          label: 'Sign Up',
           position: 'right',
           className: 'navbar-cta',
         },
